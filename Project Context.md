@@ -4,7 +4,7 @@ Personal project, not connected to Averion Strategy. Vocabulary lives in [GLOSSA
 
 ## Status
 
-Design agreed through a grilling session on 20/10/2026. Spec written to [docs/spec.md](docs/spec.md) on 20/10/2026, kept locally until the GitHub repo and issue tracker exist. Broken into ten tickets on 20/10/2026 under `.scratch/v1/issues/` (01 is the starting point; 02, 03, and 08 can run in parallel after it). Public GitHub repo created 20/10/2026: https://github.com/w1bbsy/thundergif (design docs and tickets pushed to main). No code written yet.
+Design agreed through a grilling session on 20/10/2026. Spec written to [docs/spec.md](docs/spec.md) on 20/10/2026, kept in the repo as the reference design. Broken into ten tickets on 20/10/2026, now GitHub issues #1 to #10 with native blocking links and the ready-for-agent label (#1 is the starting point; #2, #3, and #8 can run in parallel after it). Agent skills configured 20/10/2026: GitHub Issues, default triage labels, single-context domain docs (see CLAUDE.md). Public GitHub repo created 20/10/2026: https://github.com/w1bbsy/thundergif . No code written yet.
 
 ## Decisions
 
