@@ -1,6 +1,6 @@
 // GIPHY Provider: the only place that knows GIPHY's URLs, parameters, and response layout.
 
-import { PAGE_SIZE } from './gif.js';
+import { PAGE_SIZE, inOrder } from './gif.js';
 import { fetchFromProvider } from './errors.js';
 
 const API = 'https://api.giphy.com/v1/gifs';
@@ -47,6 +47,17 @@ export function giphy({ key, rating, fetch }) {
   }
 
   return {
+    /**
+     * Looks GIFs up by ID, in the order given; IDs GIPHY no longer has are left out.
+     * @param {string[]} ids
+     * @returns {Promise<import('./gif.js').Gif[]>}
+     */
+    async lookup(ids) {
+      const url = new URL(API);
+      url.search = new URLSearchParams({ api_key: key, ids: ids.join(',') }).toString();
+      const body = await fetchFromProvider(fetch, url, (r) => r.status === 401 || r.status === 403);
+      return inOrder(ids, body.data.map(toGif));
+    },
     /** @param {number} [offset] */
     trending: (offset = 0) => page('trending', {}, offset),
     /**

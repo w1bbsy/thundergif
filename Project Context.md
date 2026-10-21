@@ -11,8 +11,8 @@ Design agreed through a grilling session on 20/10/2026. Spec written to [docs/sp
 1. #4 KLIPY Provider - done (committed), manual check pending
 2. #5 Switching Provider - done (committed), manual check pending
 3. #6 Key check and error messages - done (committed), manual check pending
-4. #7 Favourites - in progress
-5. #9 Keyboard use - not started
+4. #7 Favourites - done (committed), manual check pending
+5. #9 Keyboard use - in progress
 6. #10 v1 release (README incl. why the install warning appears, licence, release notes, build) - not started; publishing the GitHub Release is the maintainer's step
 7. Draft a Thunderbird feature request for an add-on API to insert remote images into drafts (docs/upstream/) - not started; the maintainer posts it
 8. Code review, then manual checks by the maintainer - not started

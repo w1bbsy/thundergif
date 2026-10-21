@@ -71,3 +71,25 @@ export async function getActiveProvider(browser, withKeys) {
 export async function setActiveProvider(browser, provider) {
   await browser.storage.local.set({ activeProvider: provider });
 }
+
+/**
+ * The IDs of a Provider's Favourites, newest first. Only IDs are kept, never media URLs.
+ *
+ * @param {any} browser
+ * @param {import('../providers/providers.js').ProviderId} provider
+ * @returns {Promise<string[]>}
+ */
+export async function getFavourites(browser, provider) {
+  const { favourites = {} } = await browser.storage.local.get('favourites');
+  return favourites[provider] ?? [];
+}
+
+/**
+ * @param {any} browser
+ * @param {import('../providers/providers.js').ProviderId} provider
+ * @param {string[]} ids
+ */
+export async function setFavourites(browser, provider, ids) {
+  const { favourites = {} } = await browser.storage.local.get('favourites');
+  await browser.storage.local.set({ favourites: { ...favourites, [provider]: ids } });
+}

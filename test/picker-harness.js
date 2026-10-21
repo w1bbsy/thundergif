@@ -20,8 +20,14 @@ export const searchRoutes = [
   giphySearch('zqxjvkwplm9q', '0', 'giphy-search-empty.json'),
 ];
 export const isShown = (element) => element !== null && element.closest('[hidden]') === null;
-/** The GIF tiles currently in the Picker's grid. */
-export const gridTiles = async () => within(await screen.findByRole('list', { name: 'GIFs' })).queryAllByRole('button');
+/** The GIF tiles (the buttons that insert a GIF) currently in the Picker's grid. */
+export const gridTiles = async () =>
+  within(await screen.findByRole('list', { name: 'GIFs' }))
+    .queryAllByRole('button')
+    .filter((button) => !button.hasAttribute('aria-pressed'));
+/** The Favourite star on the tile for the GIF with this description. */
+export const starFor = async (description) =>
+  within(await screen.findByRole('list', { name: 'GIFs' })).getByRole('button', { name: `Favourite: ${description}` });
 export const firstTileDescription = async () => (await gridTiles())[0]?.querySelector('img')?.alt;
 
 export async function openPicker({ storage = { giphyKey: GIPHY_KEY }, granted = true, editorAccepts = true, plainText = false, routes = [giphyTrending], waitForStart = true } = {}) {

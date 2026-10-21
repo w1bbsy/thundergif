@@ -42,7 +42,10 @@ body {
   max-height: 380px;
   overflow-y: auto;
 }
-.grid button {
+.grid li {
+  position: relative;
+}
+.grid button:not(.star) {
   display: block;
   width: 100%;
   aspect-ratio: 1;
@@ -133,4 +136,41 @@ footer .settings {
   display: flex;
   gap: 4px;
   align-items: center;
+}
+.grid .star {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.45);
+  color: #ffffff;
+  font-size: 13px;
+  line-height: 22px;
+  cursor: pointer;
+}
+.grid .star[aria-pressed="true"] {
+  color: #ffc400;
+}
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.tabs [role="tab"] {
+  flex: 1;
+  padding: 4px;
+  border: 1px solid var(--muted);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+}
+.tabs [role="tab"][aria-selected="true"] {
+  background: var(--tile);
+  font-weight: 600;
 }

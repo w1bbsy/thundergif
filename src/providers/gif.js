@@ -23,3 +23,14 @@
  */
 
 export const PAGE_SIZE = 24;
+
+/**
+ * Puts looked-up GIFs back in the order their IDs were asked for, leaving out any not found.
+ *
+ * @param {string[]} ids
+ * @param {Gif[]} gifs
+ */
+export function inOrder(ids, gifs) {
+  const byId = new Map(gifs.map((gif) => [gif.id, gif]));
+  return ids.flatMap((id) => byId.get(id) ?? []);
+}

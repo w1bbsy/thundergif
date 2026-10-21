@@ -18,7 +18,7 @@ describe('Picker with a GIPHY Provider key', () => {
     await openPicker();
 
     const results = await screen.findByRole('list', { name: 'GIFs' });
-    const tiles = within(results).getAllByRole('button');
+    const tiles = await gridTiles();
     expect(tiles).toHaveLength(24);
     const firstPreview = within(tiles[0]).getByRole('img');
     expect(firstPreview.getAttribute('src')).toMatch(/^https:\/\/media\d\.giphy\.com\/.+\/100w\.gif/);
@@ -45,7 +45,7 @@ describe('Picker with a GIPHY Provider key', () => {
     const { composeDoc, browser, closed } = await openPicker();
     const results = await screen.findByRole('list', { name: 'GIFs' });
 
-    await userEvent.click(within(results).getAllByRole('button')[0]);
+    await userEvent.click((await gridTiles())[0]);
 
     await waitFor(() => expect(closed.value).toBe(true));
     expect(browser.scripting.injections[0].target).toEqual({ tabId: 7 });
@@ -62,7 +62,7 @@ describe('Picker with a GIPHY Provider key', () => {
     const { composeDoc, isShownInDraft } = await openPicker();
     const results = await screen.findByRole('list', { name: 'GIFs' });
 
-    await userEvent.click(within(results).getAllByRole('button')[0]);
+    await userEvent.click((await gridTiles())[0]);
 
     await waitFor(() => expect(composeDoc.querySelector('img')).not.toBeNull());
     expect(isShownInDraft(composeDoc.querySelector('img'))).toBe(true);
@@ -105,7 +105,7 @@ describe('Picker when the compose editor refuses the GIF', () => {
     const { composeDoc, closed } = await openPicker({ editorAccepts: false });
     const results = await screen.findByRole('list', { name: 'GIFs' });
 
-    await userEvent.click(within(results).getAllByRole('button')[0]);
+    await userEvent.click((await gridTiles())[0]);
 
     expect(await screen.findByText(/could not insert the GIF/i)).toBeTruthy();
     expect(closed.value).toBe(false);

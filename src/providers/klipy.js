@@ -1,5 +1,5 @@
 // KLIPY Provider: the only place that knows KLIPY's URLs, parameters, and response layout.
-import { PAGE_SIZE } from './gif.js';
+import { PAGE_SIZE, inOrder } from './gif.js';
 import { fetchFromProvider } from './errors.js';
 
 const API = 'https://api.klipy.com/api/v1';
@@ -30,7 +30,7 @@ export function klipy({ key, rating, fetch }) {
    * @returns {Promise<import('./gif.js').Page>}
    */
   async function page(endpoint, params, page) {
-    const url = new URL(`${API}/${encodeURIComponent(key)}/gifs/${endpoint}`);
+    const url = endpointUrl(endpoint);
     url.search = new URLSearchParams({
       per_page: String(PAGE_SIZE),
       page: String(page),
@@ -43,7 +43,21 @@ export function klipy({ key, rating, fetch }) {
     return { gifs: body.data.data.map(toGif), next: body.data.has_next ? page + 1 : null };
   }
 
+  /** @param {string} endpoint */
+  const endpointUrl = (endpoint) => new URL(`${API}/${encodeURIComponent(key)}/gifs/${endpoint}`);
+
   return {
+    /**
+     * Looks GIFs up by slug, in the order given; slugs KLIPY no longer has are left out.
+     * @param {string[]} ids
+     * @returns {Promise<import('./gif.js').Gif[]>}
+     */
+    async lookup(ids) {
+      const url = endpointUrl('items');
+      url.search = new URLSearchParams({ slugs: ids.join(',') }).toString();
+      const body = await fetchFromProvider(fetch, url, (r) => [401, 403, 404].includes(r.status));
+      return inOrder(ids, body.data.data.map(toGif));
+    },
     /** @param {number} [next] */
     trending: (next = 1) => page('trending', {}, next),
     /**
@@ -62,7 +76,9 @@ function toGif(item) {
   const preview = item.file.xs.gif;
   const insert = item.file.md.gif;
   return {
-    id: item.slug,
+    // KLIPY adds a per-request suffix to slugs in search results (e.g. "--kImauHA87"); the
+    // lasting slug without it is what the items lookup returns, so that is the ID kept.
+    id: String(item.slug).replace(/--k[A-Za-z0-9]{8}$/, ''),
     description: item.title || 'GIF',
     preview: { url: preview.url, width: preview.width, height: preview.height },
     insert: { url: insert.url, width: insert.width, height: insert.height },

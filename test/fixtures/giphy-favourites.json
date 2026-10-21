@@ -1,0 +1,55 @@
+{
+  "data": [
+    {
+      "type": "gif",
+      "id": "BFYLNwlsSNtcc",
+      "title": "Laughter Laughing GIF",
+      "alt_text": "",
+      "rating": "pg",
+      "images": {
+        "fixed_width_small": {
+          "url": "https://media2.giphy.com/media/v1.Y2lkPWYwODJhZjNmZXVuZ3ljZDd4bnVpcHBtbWV0bjN6Ym90Mzc5amU3OXRuaDh3MjdreCZlcD12MV9naWZzJmN0PWc/BFYLNwlsSNtcc/100w.gif",
+          "width": "100",
+          "height": "100",
+          "size": "136773"
+        },
+        "downsized": {
+          "url": "https://media2.giphy.com/media/v1.Y2lkPWYwODJhZjNmZXVuZ3ljZDd4bnVpcHBtbWV0bjN6Ym90Mzc5amU3OXRuaDh3MjdreCZlcD12MV9naWZzJmN0PWc/BFYLNwlsSNtcc/giphy.gif",
+          "width": "160",
+          "height": "159",
+          "size": "373973"
+        }
+      }
+    },
+    {
+      "type": "gif",
+      "id": "7lN32ye7lLew1hWOyW",
+      "title": "Boom Bang GIF by Atlanta Dream",
+      "alt_text": "",
+      "rating": "g",
+      "images": {
+        "fixed_width_small": {
+          "url": "https://media4.giphy.com/media/v1.Y2lkPWYwODJhZjNmZXVuZ3ljZDd4bnVpcHBtbWV0bjN6Ym90Mzc5amU3OXRuaDh3MjdreCZlcD12MV9naWZzJmN0PWc/7lN32ye7lLew1hWOyW/100w.gif",
+          "width": "100",
+          "height": "100",
+          "size": "205890"
+        },
+        "downsized": {
+          "url": "https://media4.giphy.com/media/v1.Y2lkPWYwODJhZjNmZXVuZ3ljZDd4bnVpcHBtbWV0bjN6Ym90Mzc5amU3OXRuaDh3MjdreCZlcD12MV9naWZzJmN0PWc/7lN32ye7lLew1hWOyW/giphy-downsized.gif",
+          "width": "198",
+          "height": "198",
+          "size": "301965"
+        }
+      }
+    }
+  ],
+  "pagination": {
+    "total_count": 2,
+    "count": 2,
+    "offset": 0
+  },
+  "meta": {
+    "status": 200,
+    "msg": "OK"
+  }
+}

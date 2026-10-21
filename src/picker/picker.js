@@ -1,7 +1,14 @@
 import { PROVIDERS, PROVIDER_IDS } from '../providers/providers.js';
 import { insertIntoCompose, isPlainText } from '../compose/insert.js';
 import { ProviderError } from '../providers/errors.js';
-import { getProviderKey, getRating, getActiveProvider, setActiveProvider } from '../settings/store.js';
+import {
+  getProviderKey,
+  getRating,
+  getActiveProvider,
+  setActiveProvider,
+  getFavourites,
+  setFavourites,
+} from '../settings/store.js';
 
 /**
  * @typedef {object} PickerEnv
@@ -40,11 +47,29 @@ export async function startPicker(env) {
   /** @type {ReturnType<typeof info.create>} */
   let provider = info.create({ key: /** @type {string} */ (keys[firstId]), rating, fetch: env.fetch });
   const attribution = /** @type {HTMLElement} */ (document.querySelector('.attribution'));
+  let activeId = firstId;
+  /** @type {string[]} newest first */
+  let favourites = [];
+  const browseTab = /** @type {HTMLButtonElement} */ (document.querySelector('[role="tab"].browse'));
+  const favouritesTab = /** @type {HTMLButtonElement} */ (document.querySelector('[role="tab"].favourites'));
+  /** @param {HTMLButtonElement} tab */
+  const selectTab = (tab) => {
+    for (const each of [browseTab, favouritesTab]) each.setAttribute('aria-selected', String(each === tab));
+  };
+
+  /** @param {import('../providers/gif.js').Gif} gif */
+  const toggleFavourite = (gif) => {
+    favourites = favourites.includes(gif.id) ? favourites.filter((id) => id !== gif.id) : [gif.id, ...favourites];
+    setFavourites(browser, activeId, favourites);
+    return favourites.includes(gif.id);
+  };
 
   const grid = /** @type {HTMLUListElement} */ (document.querySelector('.grid'));
   const more = /** @type {HTMLButtonElement} */ (document.querySelector('button.more'));
   const tiles = (/** @type {import('../providers/gif.js').Gif[]} */ gifs) =>
-    gifs.map((gif) => tile(document, gif, () => insert(env, gif)));
+    gifs.map((gif) =>
+      tile(document, gif, () => insert(env, gif), { starred: favourites.includes(gif.id), toggle: () => toggleFavourite(gif) }),
+    );
   /** @param {unknown} error */
   const failed = (error) => {
     const kind = error instanceof ProviderError ? error.kind : 'unreachable';
@@ -106,7 +131,9 @@ export async function startPicker(env) {
     }
   });
 
-  // The term whose results are showing ('' for trending), so the same search is not repeated.
+  // The term whose results are showing ('' for trending, null for Favourites), so the same
+  // search is not repeated.
+  /** @type {string | null} */
   let shownTerm = '';
   /** @type {ReturnType<typeof setTimeout> | undefined} */
   let typingTimer;
@@ -116,6 +143,7 @@ export async function startPicker(env) {
     clearTimeout(typingTimer);
     if (term === shownTerm) return;
     shownTerm = term;
+    selectTab(browseTab);
     if (term === '') show(provider.trending);
     else show((next) => provider.search(term, next), `No GIFs found for "${term}". Try different words.`);
   };
@@ -134,11 +162,34 @@ export async function startPicker(env) {
     else typingTimer = setTimeout(() => search(term), env.typingPauseMs ?? 500);
   });
 
+  const showFavourites = () => {
+    clearTimeout(typingTimer);
+    shownTerm = null;
+    selectTab(favouritesTab);
+    if (favourites.length === 0) {
+      generation++;
+      grid.replaceChildren();
+      setNext(null);
+      showMessage(document, 'No Favourites yet. Star a GIF to keep it here.');
+      return;
+    }
+    const ids = [...favourites];
+    show(async () => ({ gifs: await provider.lookup(ids), next: null }), 'None of your Favourites are available any more.');
+  };
+  favouritesTab.addEventListener('click', showFavourites);
+  browseTab.addEventListener('click', () => {
+    shownTerm = null;
+    search(searchBox.value.trim());
+  });
+
   /**
    * Makes a Provider the one the Picker searches, starting again from its trending GIFs.
    * @param {import('../providers/providers.js').ProviderId} id
    */
   const activate = async (id) => {
+    activeId = id;
+    favourites = await getFavourites(browser, id);
+    selectTab(browseTab);
     info = PROVIDERS[id];
     provider = info.create({ key: /** @type {string} */ (keys[id]), rating, fetch: env.fetch });
     searchBox.setAttribute('aria-label', `Search ${info.name}`);
@@ -204,8 +255,9 @@ async function insert(env, gif) {
  * @param {Document} document
  * @param {import('../providers/gif.js').Gif} gif
  * @param {() => void} onChoose
+ * @param {{ starred: boolean, toggle: () => boolean }} favourite
  */
-function tile(document, gif, onChoose) {
+function tile(document, gif, onChoose, favourite) {
   const item = document.createElement('li');
   const button = document.createElement('button');
   button.type = 'button';
@@ -216,7 +268,14 @@ function tile(document, gif, onChoose) {
   img.height = gif.preview.height;
   button.append(img);
   button.addEventListener('click', onChoose);
-  item.append(button);
+  const star = document.createElement('button');
+  star.type = 'button';
+  star.className = 'star';
+  star.setAttribute('aria-label', `Favourite: ${gif.description}`);
+  star.setAttribute('aria-pressed', String(favourite.starred));
+  star.textContent = '\u2605';
+  star.addEventListener('click', () => star.setAttribute('aria-pressed', String(favourite.toggle())));
+  item.append(button, star);
   return item;
 }
 

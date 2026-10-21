@@ -1,0 +1,55 @@
+{
+  "result": true,
+  "data": {
+    "data": [
+      {
+        "id": 7758528222954429,
+        "slug": "milk-and-mocha-milk-mocha-7",
+        "title": "Milk and Mocha Bear Hug",
+        "type": "gif",
+        "file": {
+          "xs": {
+            "gif": {
+              "url": "https://static.klipy.com/ii/bea85337777ad0e23e63683391435543/ab/f1/x3Hiwgte.gif",
+              "width": 90,
+              "height": 90,
+              "size": 5916
+            }
+          },
+          "md": {
+            "gif": {
+              "url": "https://static.klipy.com/ii/bea85337777ad0e23e63683391435543/ab/f1/QqFzocj3.gif",
+              "width": 480,
+              "height": 480,
+              "size": 106693
+            }
+          }
+        }
+      },
+      {
+        "id": 4362065056797108,
+        "slug": "happy-wednesday-hump-day-5",
+        "title": "Happy Hump Day with Cute Horse",
+        "type": "gif",
+        "file": {
+          "xs": {
+            "gif": {
+              "url": "https://static.klipy.com/ii/84b4c0b02782dda9051003f9e36484ec/5d/93/bmwu4BDQ.gif",
+              "width": 90,
+              "height": 90,
+              "size": 41930
+            }
+          },
+          "md": {
+            "gif": {
+              "url": "https://static.klipy.com/ii/84b4c0b02782dda9051003f9e36484ec/5d/93/y4qKM7eV.gif",
+              "width": 498,
+              "height": 498,
+              "size": 447056
+            }
+          }
+        }
+      }
+    ]
+  }
+}
