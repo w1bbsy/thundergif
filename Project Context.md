@@ -13,8 +13,8 @@ Design agreed through a grilling session on 20/10/2026. Spec written to [docs/sp
 3. #6 Key check and error messages - done (committed), manual check pending
 4. #7 Favourites - done (committed), manual check pending
 5. #9 Keyboard use - done (committed), manual check pending
-6. #10 v1 release (README incl. why the install warning appears, licence, release notes, build) - in progress; publishing the GitHub Release is the maintainer's step
-7. Draft a Thunderbird feature request for an add-on API to insert remote images into drafts (docs/upstream/) - not started; the maintainer posts it
+6. #10 v1 release - README, licence, manual checklist, release notes and 1.0.0 build done (committed); manual checklist run and publishing the GitHub Release are the maintainer's steps
+7. Thunderbird feature request drafted at docs/upstream/thunderbird-feature-request-insert-remote-images.md - done; the maintainer posts it
 8. Code review of #4 to #9 - done, fixes committed; manual checks by the maintainer after #10
 
 Install warning decision (22/10/2026): keep the Experiment and explain the "full, unrestricted access" warning in the README; Thunderbird shows it for any add-on with an Experiment and it cannot be softened.
@@ -63,6 +63,12 @@ Install warning decision (22/10/2026): keep the Experiment and explain the "full
 - Rating values are stored as GIPHY's strings (g, pg, pg-13, r). KLIPY (#4) must translate them in its adapter.
 - Plain-text emails get the GIF's medium media URL typed at the cursor (undoable insertText).
 - `checks/thunderbird/check.py` now also checks the plain-text path in a real Thunderbird.
+
+## Release notes (1.0.0, 22/10/2026)
+
+- Licence copyright holder is the GitHub handle w1bbsy (not a personal name), as the repo is public.
+- Firefox's linter flags a missing `data_collection_permissions` key; not added, as Thunderbird's support for it is unconfirmed. Revisit before submitting to addons.thunderbird.net.
+- Thunderbird 140 ESR has not been tested; the manual checklist covers it.
 
 ## Build notes (issue #4)
 
