@@ -1,5 +1,5 @@
-import { getGiphyKey, setGiphyKey, getRating, setRating, RATINGS } from './store.js';
-import { GIPHY_ORIGINS } from '../providers/giphy.js';
+import { getProviderKey, setProviderKey, getRating, setRating, RATINGS } from './store.js';
+import { PROVIDERS, PROVIDER_IDS } from '../providers/providers.js';
 
 /**
  * @typedef {object} SettingsEnv
@@ -10,48 +10,49 @@ import { GIPHY_ORIGINS } from '../providers/giphy.js';
 /** @param {SettingsEnv} env */
 export async function startSettings({ document, browser }) {
   const form = /** @type {HTMLFormElement} */ (document.querySelector('form.settings'));
-  const keyField = /** @type {HTMLInputElement} */ (document.getElementById('giphy-key'));
   const status = /** @type {HTMLElement} */ (document.querySelector('.status'));
-
   const ratingField = /** @type {HTMLSelectElement} */ (document.getElementById('rating'));
+  const keyField = (/** @type {string} */ id) => /** @type {HTMLInputElement} */ (document.getElementById(`${id}-key`));
 
-  keyField.value = await getGiphyKey(browser);
+  for (const id of PROVIDER_IDS) keyField(id).value = await getProviderKey(browser, id);
   ratingField.replaceChildren(...RATINGS.map(({ value, label }) => new Option(label, value)));
   ratingField.value = await getRating(browser);
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    await setGiphyKey(browser, keyField.value.trim());
+    for (const id of PROVIDER_IDS) await setProviderKey(browser, id, keyField(id).value.trim());
     await setRating(browser, /** @type {import('./store.js').Rating} */ (ratingField.value));
     status.textContent = 'Saved';
   });
 
-  await showAccess(document, browser);
+  const access = /** @type {HTMLElement} */ (document.querySelector('.access'));
+  for (const id of PROVIDER_IDS) {
+    const row = document.createElement('p');
+    access.append(row);
+    await showAccess(document, browser, row, PROVIDERS[id]);
+  }
 }
 
 /**
- * Shows whether the add-on may reach GIPHY, with a button to allow it if not.
+ * Shows whether the add-on may reach a Provider, with a button to allow it if not.
  *
  * @param {Document} document
  * @param {any} browser
+ * @param {HTMLElement} row
+ * @param {import('../providers/providers.js').ProviderInfo} provider
  */
-async function showAccess(document, browser) {
-  const access = /** @type {HTMLElement} */ (document.querySelector('.access'));
-  const status = /** @type {HTMLElement} */ (access.querySelector('.access-status'));
-  if (await browser.permissions.contains({ origins: GIPHY_ORIGINS })) {
-    status.textContent = 'Access to GIPHY allowed';
-    access.querySelector('button')?.remove();
+async function showAccess(document, browser, row, provider) {
+  if (await browser.permissions.contains({ origins: provider.origins })) {
+    row.replaceChildren(`Access to ${provider.name} allowed`);
     return;
   }
-  status.textContent = 'Thundergif needs your permission to reach GIPHY.';
-  if (access.querySelector('button')) return;
   const allow = document.createElement('button');
   allow.type = 'button';
-  allow.textContent = 'Allow access to GIPHY';
+  allow.textContent = `Allow access to ${provider.name}`;
   // Thunderbird only shows the permission prompt in direct response to a click.
   allow.addEventListener('click', async () => {
-    await browser.permissions.request({ origins: GIPHY_ORIGINS });
-    await showAccess(document, browser);
+    await browser.permissions.request({ origins: provider.origins });
+    await showAccess(document, browser, row, provider);
   });
-  access.append(allow);
+  row.replaceChildren(`Thundergif needs your permission to reach ${provider.name}. `, allow);
 }

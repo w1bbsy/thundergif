@@ -1,6 +1,6 @@
 {
   "name": "thundergif",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "Thunderbird add-on: search GIPHY or KLIPY and insert a GIF into an email",
   "directories": {
     "doc": "docs"

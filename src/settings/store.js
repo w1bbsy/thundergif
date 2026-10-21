@@ -1,17 +1,23 @@
 // The one place that knows how settings are laid out in the add-on's local storage.
 
-/** @param {any} browser */
-export async function getGiphyKey(browser) {
-  const { giphyKey = '' } = await browser.storage.local.get('giphyKey');
-  return /** @type {string} */ (giphyKey);
+/**
+ * @param {any} browser
+ * @param {import('../providers/providers.js').ProviderId} provider
+ * @returns {Promise<string>}
+ */
+export async function getProviderKey(browser, provider) {
+  const name = `${provider}Key`;
+  const { [name]: key = '' } = await browser.storage.local.get(name);
+  return key;
 }
 
 /**
  * @param {any} browser
+ * @param {import('../providers/providers.js').ProviderId} provider
  * @param {string} key
  */
-export async function setGiphyKey(browser, key) {
-  await browser.storage.local.set({ giphyKey: key });
+export async function setProviderKey(browser, provider, key) {
+  await browser.storage.local.set({ [`${provider}Key`]: key });
 }
 
 /**

@@ -6,6 +6,19 @@ Personal project, not connected to Averion Strategy. Vocabulary lives in [GLOSSA
 
 Design agreed through a grilling session on 20/10/2026. Spec written to [docs/spec.md](docs/spec.md) on 20/10/2026, kept in the repo as the reference design. Broken into ten tickets on 20/10/2026, now GitHub issues #1 to #10 with native blocking links and the ready-for-agent label (#1 is the starting point; #2, #3, and #8 can run in parallel after it). Agent skills configured 20/10/2026: GitHub Issues, default triage labels, single-context domain docs (see CLAUDE.md). Public GitHub repo created 20/10/2026: https://github.com/w1bbsy/thundergif . Issue #1 (walking skeleton) implemented 21/10/2026. Manual check 21/10/2026: install, key, trending, attribution, insert at cursor, undo, and sent-as-link all passed; GIFs showed broken in the draft. Fixed 22/10/2026 with an Experiment (see docs/adr/0001), verified by the real-Thunderbird check; final manual check of 0.1.2 passed 22/10/2026; issue #1 closed. Issues #2, #3, #8 implemented 22/10/2026 (0.2.0), awaiting manual check; #11 icon drafted, awaiting approval.
 
+## Current plan (remaining v1 work, started 22/10/2026)
+
+1. #4 KLIPY Provider - done (committed), manual check pending
+2. #5 Switching Provider - in progress
+3. #6 Key check and error messages - not started
+4. #7 Favourites - not started
+5. #9 Keyboard use - not started
+6. #10 v1 release (README incl. why the install warning appears, licence, release notes, build) - not started; publishing the GitHub Release is the maintainer's step
+7. Draft a Thunderbird feature request for an add-on API to insert remote images into drafts (docs/upstream/) - not started; the maintainer posts it
+8. Code review, then manual checks by the maintainer - not started
+
+Install warning decision (22/10/2026): keep the Experiment and explain the "full, unrestricted access" warning in the README; Thunderbird shows it for any add-on with an Experiment and it cannot be softened.
+
 ## Decisions
 
 | # | Topic | Decision |
@@ -50,6 +63,14 @@ Design agreed through a grilling session on 20/10/2026. Spec written to [docs/sp
 - Rating values are stored as GIPHY's strings (g, pg, pg-13, r). KLIPY (#4) must translate them in its adapter.
 - Plain-text emails get the GIF's medium media URL typed at the cursor (undoable insertText).
 - `checks/thunderbird/check.py` now also checks the plain-text path in a real Thunderbird.
+
+## Build notes (issue #4)
+
+- KLIPY pages by page number (from 1) with a has_next flag; the Provider passes it back as Page.next.
+- KLIPY previews use the xs GIF (90px), inserts use md.
+- KLIPY content filter: with no filter sent, KLIPY returns the same as "off", so Thundergif always sends one (G=high, PG=medium, PG-13=low, R=off). Spot check 22/10/2026 on "kiss": off, low and medium returned identical results; only high removed some.
+- KLIPY appends a per-request suffix to slugs (e.g. kiss-AA4--kImauHA87); relevant to Favourites (#7).
+- KLIPY bad key: HTTP 404 with "The provided API key is invalid." GIPHY bad key: HTTP 401. Relevant to #6.
 
 ## Required by Provider terms
 

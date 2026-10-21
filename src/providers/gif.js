@@ -18,7 +18,8 @@
 /**
  * @typedef {object} Page
  * @property {Gif[]} gifs
- * @property {number | null} next offset of the following page, or null when there are no more
+ * @property {number | null} next where the following page starts (a Provider's own offset or page
+ *   number, passed back to it unchanged), or null when there are no more
  */
 
 export const PAGE_SIZE = 24;

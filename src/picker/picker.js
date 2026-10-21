@@ -1,6 +1,6 @@
-import { giphy, GIPHY_ORIGINS } from '../providers/giphy.js';
+import { PROVIDERS, PROVIDER_IDS } from '../providers/providers.js';
 import { insertIntoCompose, isPlainText } from '../compose/insert.js';
-import { getGiphyKey, getRating } from '../settings/store.js';
+import { getProviderKey, getRating } from '../settings/store.js';
 
 /**
  * @typedef {object} PickerEnv
@@ -19,21 +19,34 @@ export async function startPicker(env) {
   if (composeTab && (await isPlainText(browser, composeTab.id))) {
     /** @type {HTMLElement} */ (document.querySelector('.note')).hidden = false;
   }
-  const giphyKey = await getGiphyKey(browser);
-  if (!giphyKey) {
+  const rating = await getRating(browser);
+  /** @type {Partial<Record<import('../providers/providers.js').ProviderId, string>>} */
+  const keys = {};
+  for (const id of PROVIDER_IDS) {
+    const key = await getProviderKey(browser, id);
+    if (key) keys[id] = key;
+  }
+  const activeId = PROVIDER_IDS.find((id) => keys[id]);
+  if (!activeId) {
     const openSettingsForKey = actionButton(document, 'Open settings', () => browser.runtime.openOptionsPage());
-    showMessage(document, 'Add a GIPHY Provider key in settings to start finding GIFs.', openSettingsForKey);
+    showMessage(document, 'Add a GIPHY or KLIPY Provider key in settings to start finding GIFs.', openSettingsForKey);
     return;
   }
-  const provider = giphy({ key: giphyKey, rating: await getRating(browser), fetch: env.fetch });
+  const info = PROVIDERS[activeId];
+  const provider = info.create({ key: /** @type {string} */ (keys[activeId]), rating, fetch: env.fetch });
+  searchBox.setAttribute('aria-label', `Search ${info.name}`);
+  searchBox.placeholder = `Search ${info.name}`;
+  const attribution = /** @type {HTMLElement} */ (document.querySelector('.attribution'));
+  attribution.textContent = info.attribution;
+  attribution.hidden = info.attribution === '';
 
   const grid = /** @type {HTMLUListElement} */ (document.querySelector('.grid'));
   const more = /** @type {HTMLButtonElement} */ (document.querySelector('button.more'));
   const tiles = (/** @type {import('../providers/gif.js').Gif[]} */ gifs) =>
     gifs.map((gif) => tile(document, gif, () => insert(env, gif)));
-  const unreachable = () => showMessage(document, 'Thundergif could not reach GIPHY. Try again in a moment.');
+  const unreachable = () => showMessage(document, `Thundergif could not reach ${info.name}. Try again in a moment.`);
 
-  /** @typedef {(offset: number) => Promise<import('../providers/gif.js').Page>} PageSource */
+  /** @typedef {(next?: number) => Promise<import('../providers/gif.js').Page>} PageSource */
   /** @type {{ source: PageSource, next: number | null }} */
   let listing = { source: provider.trending, next: null };
   // Each new listing bumps this, so replies for an older listing are ignored when they arrive.
@@ -54,7 +67,7 @@ export async function startPicker(env) {
     const mine = ++generation;
     hideMessage(document);
     try {
-      const page = await source(0);
+      const page = await source();
       if (mine !== generation) return;
       grid.replaceChildren(...tiles(page.gifs));
       listing = { source, next: null };
@@ -92,7 +105,7 @@ export async function startPicker(env) {
     if (term === shownTerm) return;
     shownTerm = term;
     if (term === '') show(provider.trending);
-    else show((offset) => provider.search(term, offset), `No GIFs found for "${term}". Try different words.`);
+    else show((next) => provider.search(term, next), `No GIFs found for "${term}". Try different words.`);
   };
 
   const form = /** @type {HTMLFormElement} */ (document.querySelector('form.search'));
@@ -109,7 +122,7 @@ export async function startPicker(env) {
     else typingTimer = setTimeout(() => search(term), env.typingPauseMs ?? 500);
   });
 
-  if (await browser.permissions.contains({ origins: GIPHY_ORIGINS })) {
+  if (await browser.permissions.contains({ origins: info.origins })) {
     searchBox.disabled = false;
     searchBox.focus();
     await show(provider.trending);
@@ -117,7 +130,7 @@ export async function startPicker(env) {
   }
   // Permission prompts are unreliable from a popup, so the settings page (a full tab) asks.
   const openSettings = actionButton(document, 'Open settings', () => browser.runtime.openOptionsPage());
-  showMessage(document, 'Thundergif needs your permission to reach GIPHY. Allow it in settings.', openSettings);
+  showMessage(document, `Thundergif needs your permission to reach ${info.name}. Allow it in settings.`, openSettings);
 }
 
 /**

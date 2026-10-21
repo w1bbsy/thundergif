@@ -1,44 +1,17 @@
 import { describe, it, expect } from 'vitest';
 import { screen, within, waitFor } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
-import giphyTrendingFixture from './fixtures/giphy-trending.json';
-import { loadPage, fakeThunderbird, fakeNetwork } from './fakes.js';
-import { startPicker } from '../src/picker/picker.js';
-
-const GIPHY_KEY = 'test-giphy-key';
-const firstGif = giphyTrendingFixture.data[0];
-const giphyTrending = { prefix: 'https://api.giphy.com/v1/gifs/trending', fixture: 'giphy-trending.json' };
-const giphySearch = (q, offset, fixture) => ({
-  prefix: 'https://api.giphy.com/v1/gifs/search',
-  params: { q, offset },
-  fixture,
-});
-const searchRoutes = [
+import {
+  GIPHY_KEY,
+  firstGif,
   giphyTrending,
-  giphySearch('cat', '0', 'giphy-search-cat-0.json'),
-  giphySearch('cat', '24', 'giphy-search-cat-24.json'),
-  giphySearch('zqxjvkwplm9q', '0', 'giphy-search-empty.json'),
-];
-const isShown = (element) => element !== null && element.closest('[hidden]') === null;
-/** The GIF tiles currently in the Picker's grid. */
-const gridTiles = async () => within(await screen.findByRole('list', { name: 'GIFs' })).queryAllByRole('button');
-const firstTileDescription = async () => (await gridTiles())[0]?.querySelector('img')?.alt;
-
-async function openPicker({ storage = { giphyKey: GIPHY_KEY }, granted = true, editorAccepts = true, plainText = false, routes = [giphyTrending], waitForStart = true } = {}) {
-  loadPage('picker/picker.html');
-  const tb = fakeThunderbird({ storage, granted, editorAccepts, plainText });
-  const net = fakeNetwork(routes);
-  const closed = { value: false };
-  const started = startPicker({
-    document,
-    browser: tb.browser,
-    fetch: net.fetch,
-    close: () => (closed.value = true),
-    typingPauseMs: 20,
-  });
-  if (waitForStart) await started;
-  return { ...tb, ...net, closed };
-}
+  giphySearch,
+  searchRoutes,
+  isShown,
+  gridTiles,
+  firstTileDescription,
+  openPicker,
+} from './picker-harness.js';
 
 describe('Picker with a GIPHY Provider key', () => {
   it('shows 24 GIPHY trending GIFs as small previews when it opens', async () => {
@@ -112,7 +85,7 @@ describe('Picker without a Provider key', () => {
   it('turns the search box off until a Provider key is added', async () => {
     await openPicker({ storage: {} });
 
-    await waitFor(() => expect(screen.getByRole('searchbox', { name: 'Search GIPHY' }).disabled).toBe(true));
+    await waitFor(() => expect(screen.getByRole('searchbox', { name: 'Search' }).disabled).toBe(true));
   });
 
   it('does not contact GIPHY and offers a way to the settings page', async () => {
@@ -229,10 +202,10 @@ describe('Searching GIPHY in the Picker', () => {
   it('keeps the search results when the slower trending reply arrives afterwards', async () => {
     const slowTrending = { ...giphyTrending, delayMs: 50 };
     await openPicker({ routes: [slowTrending, ...searchRoutes.slice(1)], waitForStart: false });
-    const box = screen.getByRole('searchbox', { name: 'Search GIPHY' });
+    const box = screen.getByRole('searchbox');
     await waitFor(() => expect(box.disabled).toBe(false));
 
-    await userEvent.type(screen.getByRole('searchbox', { name: 'Search GIPHY' }), 'cat{Enter}');
+    await userEvent.type(box, 'cat{Enter}');
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(await firstTileDescription()).toBe('High Five Ai GIF');

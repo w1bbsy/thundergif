@@ -66,4 +66,22 @@ describe('Settings page', () => {
 
     expect(screen.getByLabelText('Rating').selectedOptions[0].textContent).toBe('R');
   });
+
+  it('saves a KLIPY Provider key alongside the GIPHY one', async () => {
+    const { stored } = await openSettings({ storage: { giphyKey: 'giphy-key' } });
+
+    await userEvent.type(screen.getByLabelText('KLIPY Provider key'), 'klipy-key');
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(stored.klipyKey).toBe('klipy-key');
+    expect(stored.giphyKey).toBe('giphy-key');
+  });
+
+  it('asks for access to KLIPY separately from GIPHY', async () => {
+    await openSettings({ granted: false });
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Allow access to KLIPY' }));
+
+    expect(await screen.findByText('Access to KLIPY allowed')).toBeTruthy();
+  });
 });
