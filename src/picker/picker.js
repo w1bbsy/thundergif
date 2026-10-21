@@ -8,6 +8,7 @@ import { getGiphyKey, getRating } from '../settings/store.js';
  * @property {any} browser Thunderbird's add-on API
  * @property {typeof fetch} fetch
  * @property {() => void} close
+ * @property {number} [typingPauseMs] how long typing must pause before a search runs
  */
 
 /** @param {PickerEnv} env */
@@ -33,8 +34,8 @@ export async function startPicker(env) {
   const unreachable = () => showMessage(document, 'Thundergif could not reach GIPHY. Try again in a moment.');
 
   /** @typedef {(offset: number) => Promise<import('../providers/gif.js').Page>} PageSource */
-  /** @type {{ source: PageSource, next: number | null, isSearch: boolean }} */
-  let listing = { source: provider.trending, next: null, isSearch: false };
+  /** @type {{ source: PageSource, next: number | null }} */
+  let listing = { source: provider.trending, next: null };
   // Each new listing bumps this, so replies for an older listing are ignored when they arrive.
   let generation = 0;
   let loadingMore = false;
@@ -47,17 +48,16 @@ export async function startPicker(env) {
 
   /**
    * @param {PageSource} source
-   * @param {boolean} isSearch
    * @param {string} [emptyText] what to say when there are no results
    */
-  const show = async (source, isSearch, emptyText = 'No GIFs to show right now.') => {
+  const show = async (source, emptyText = 'No GIFs to show right now.') => {
     const mine = ++generation;
     hideMessage(document);
     try {
       const page = await source(0);
       if (mine !== generation) return;
       grid.replaceChildren(...tiles(page.gifs));
-      listing = { source, next: null, isSearch };
+      listing = { source, next: null };
       setNext(page.next);
       if (page.gifs.length === 0) showMessage(document, emptyText);
     } catch {
@@ -81,22 +81,38 @@ export async function startPicker(env) {
     }
   });
 
+  // The term whose results are showing ('' for trending), so the same search is not repeated.
+  let shownTerm = '';
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  let typingTimer;
+
+  /** @param {string} term */
+  const search = (term) => {
+    clearTimeout(typingTimer);
+    if (term === shownTerm) return;
+    shownTerm = term;
+    if (term === '') show(provider.trending);
+    else show((offset) => provider.search(term, offset), `No GIFs found for "${term}". Try different words.`);
+  };
+
   const form = /** @type {HTMLFormElement} */ (document.querySelector('form.search'));
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    const term = searchBox.value.trim();
-    if (term === '') show(provider.trending, false);
-    else show((offset) => provider.search(term, offset), true, `No GIFs found for "${term}". Try different words.`);
+    search(searchBox.value.trim());
   });
-  // Emptying the box (by deleting the text or its clear button) goes back to trending.
+  // Search as the user types, but only once they pause, to spare the Provider's hourly limit.
+  // Emptying the box goes back to trending straight away.
   searchBox.addEventListener('input', () => {
-    if (searchBox.value.trim() === '' && listing.isSearch) show(provider.trending, false);
+    const term = searchBox.value.trim();
+    clearTimeout(typingTimer);
+    if (term === '') search('');
+    else typingTimer = setTimeout(() => search(term), env.typingPauseMs ?? 500);
   });
 
   if (await browser.permissions.contains({ origins: GIPHY_ORIGINS })) {
     searchBox.disabled = false;
     searchBox.focus();
-    await show(provider.trending, false);
+    await show(provider.trending);
     return;
   }
   // Permission prompts are unreliable from a popup, so the settings page (a full tab) asks.

@@ -29,7 +29,13 @@ async function openPicker({ storage = { giphyKey: GIPHY_KEY }, granted = true, e
   const tb = fakeThunderbird({ storage, granted, editorAccepts, plainText });
   const net = fakeNetwork(routes);
   const closed = { value: false };
-  const started = startPicker({ document, browser: tb.browser, fetch: net.fetch, close: () => (closed.value = true) });
+  const started = startPicker({
+    document,
+    browser: tb.browser,
+    fetch: net.fetch,
+    close: () => (closed.value = true),
+    typingPauseMs: 20,
+  });
   if (waitForStart) await started;
   return { ...tb, ...net, closed };
 }
@@ -148,6 +154,27 @@ describe('Searching GIPHY in the Picker', () => {
     expect(search.searchParams.get('q')).toBe('cat');
     expect(search.searchParams.get('limit')).toBe('24');
     expect(search.searchParams.get('rating')).toBe('pg');
+  });
+
+  it('searches once the user pauses typing, with a single request for the whole term', async () => {
+    const { requests } = await openPicker({ routes: searchRoutes });
+    await gridTiles();
+
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Search GIPHY' }), 'cat');
+
+    await waitFor(async () => expect(await firstTileDescription()).toBe('High Five Ai GIF'));
+    const searches = requests.filter((r) => r.pathname === '/v1/gifs/search');
+    expect(searches.map((r) => r.searchParams.get('q'))).toEqual(['cat']);
+  });
+
+  it('searches straight away when the Search button is pressed', async () => {
+    await openPicker({ routes: searchRoutes });
+    await gridTiles();
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Search GIPHY' }), 'cat');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Search' }));
+
+    await waitFor(async () => expect(await firstTileDescription()).toBe('High Five Ai GIF'));
   });
 
   it('adds the next 24 results under the first 24 when More is pressed', async () => {

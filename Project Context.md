@@ -44,7 +44,7 @@ Design agreed through a grilling session on 20/10/2026. Spec written to [docs/sp
 
 ## Build notes (issues #2, #3, #8)
 
-- Search runs on Enter (no search-as-you-type), to spare the 100 requests an hour. Emptying the box returns to trending.
+- Search runs once typing pauses for 500ms (one request per term, not per letter), or straight away on Enter or the Search button; the same term is never re-requested. Emptying the box returns to trending. Changed from Enter-only after the 22/10/2026 manual check.
 - A newer listing always wins: replies for an older search or page are dropped, and More ignores repeat clicks while loading.
 - A failed GIPHY request shows "could not reach GIPHY"; issue #6 will add specific messages (rate limit, bad key, offline).
 - Rating values are stored as GIPHY's strings (g, pg, pg-13, r). KLIPY (#4) must translate them in its adapter.
