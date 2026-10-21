@@ -128,4 +128,46 @@ describe('Favourites', () => {
     await waitFor(async () => expect(await firstTileDescription()).toBe('High Five Ai GIF'));
     expect(screen.getByRole('tab', { name: 'Favourites' }).getAttribute('aria-selected')).toBe('false');
   });
+
+  it('keeps both stars when the user stars on one Provider, switches and stars on the other straight away', async () => {
+    const { stored } = await openPicker({ storage: { giphyKey: GIPHY_KEY, klipyKey: KLIPY_KEY }, routes });
+    await gridTiles();
+
+    await userEvent.click(await starFor('Boom Bang GIF by Atlanta Dream'));
+    await userEvent.click(screen.getByRole('radio', { name: 'KLIPY' }));
+    await waitFor(async () => expect(await firstTileDescription()).toBe('Happy Hump Day with Cute Horse'));
+    await userEvent.click(await starFor('Happy Hump Day with Cute Horse'));
+
+    await waitFor(() =>
+      expect(stored.favourites).toEqual({ giphy: ['7lN32ye7lLew1hWOyW'], klipy: ['happy-wednesday-hump-day-5'] }),
+    );
+  });
+
+  it('files a star under the Provider its GIF came from, even mid-switch', async () => {
+    const slowKlipy = { prefix: `${KLIPY_API}/trending`, fixture: 'klipy-trending.json', delayMs: 40 };
+    const { stored } = await openPicker({
+      storage: { giphyKey: GIPHY_KEY, klipyKey: KLIPY_KEY },
+      routes: [giphyTrending, slowKlipy],
+    });
+    await gridTiles();
+    const giphyStar = await starFor('Boom Bang GIF by Atlanta Dream');
+
+    await userEvent.click(screen.getByRole('radio', { name: 'KLIPY' }));
+    giphyStar.click();
+
+    await waitFor(() => expect(stored.favourites?.giphy).toEqual(['7lN32ye7lLew1hWOyW']));
+    expect(stored.favourites.klipy ?? []).toEqual([]);
+  });
+
+  it('looks up more than 100 GIPHY Favourites in batches of 100', async () => {
+    const ids = Array.from({ length: 150 }, (_, i) => `id${i}`);
+    const { requests } = await openPicker({ storage: { giphyKey: GIPHY_KEY, favourites: { giphy: ids } }, routes });
+    await gridTiles();
+
+    await userEvent.click(screen.getByRole('tab', { name: 'Favourites' }));
+
+    await waitFor(() => expect(requests.filter((r) => r.searchParams.has('ids'))).toHaveLength(2));
+    const batches = requests.filter((r) => r.searchParams.has('ids')).map((r) => r.searchParams.get('ids').split(',').length);
+    expect(batches).toEqual([100, 50]);
+  });
 });

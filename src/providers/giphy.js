@@ -1,9 +1,13 @@
 // GIPHY Provider: the only place that knows GIPHY's URLs, parameters, and response layout.
 
-import { PAGE_SIZE, inOrder } from './gif.js';
-import { fetchFromProvider } from './errors.js';
+import { PAGE_SIZE, inOrder, batches } from './gif.js';
+import { fetchFromProvider } from './provider-request.js';
 
 const API = 'https://api.giphy.com/v1/gifs';
+/** GIPHY looks up at most this many IDs per request. */
+const LOOKUP_LIMIT = 100;
+/** GIPHY answers a bad key with 401 (or 403 for a banned one). */
+const keyRejected = (/** @type {Response} */ r) => r.status === 401 || r.status === 403;
 
 /**
  * Host permissions the add-on needs for GIPHY: the API, plus the media servers, because a GIF
@@ -22,6 +26,7 @@ export const GIPHY_ORIGINS = [
 
 /**
  * @param {{ key: string, rating: import('../settings/store.js').Rating, fetch: typeof globalThis.fetch }} options
+ * @returns {import('./gif.js').Provider}
  */
 export function giphy({ key, rating, fetch }) {
   /**
@@ -40,8 +45,7 @@ export function giphy({ key, rating, fetch }) {
       rating,
       ...params,
     }).toString();
-    // GIPHY answers a bad key with 401 (or 403 for a banned one).
-    const body = await fetchFromProvider(fetch, url, (r) => r.status === 401 || r.status === 403);
+    const body = await fetchFromProvider(fetch, url, keyRejected);
     const { offset: start, count, total_count: total } = body.pagination;
     return { gifs: body.data.map(toGif), next: count > 0 && start + count < total ? start + count : null };
   }
@@ -53,10 +57,14 @@ export function giphy({ key, rating, fetch }) {
      * @returns {Promise<import('./gif.js').Gif[]>}
      */
     async lookup(ids) {
-      const url = new URL(API);
-      url.search = new URLSearchParams({ api_key: key, ids: ids.join(',') }).toString();
-      const body = await fetchFromProvider(fetch, url, (r) => r.status === 401 || r.status === 403);
-      return inOrder(ids, body.data.map(toGif));
+      const found = [];
+      for (const batch of batches(ids, LOOKUP_LIMIT)) {
+        const url = new URL(API);
+        url.search = new URLSearchParams({ api_key: key, ids: batch.join(',') }).toString();
+        const body = await fetchFromProvider(fetch, url, keyRejected);
+        found.push(...body.data.map(toGif));
+      }
+      return inOrder(ids, found);
     },
     /** @param {number} [offset] */
     trending: (offset = 0) => page('trending', {}, offset),

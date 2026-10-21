@@ -161,3 +161,19 @@ describe('Checking a Provider key when it is saved', () => {
     expect(await screen.findByText(`${provider}: Saved, but ${provider} could not be reached to check the key`)).toBeTruthy();
   });
 });
+
+describe('Checking a key before access is allowed', () => {
+  it('asks for access instead of blaming the connection, and checks the key again on the next save', async () => {
+    const { requests, browser } = await openSettings({ granted: false });
+
+    await saveKey('GIPHY', 'new-key');
+
+    expect(await screen.findByText('GIPHY: Saved. Allow access to GIPHY below so the key can be checked.')).toBeTruthy();
+    expect(requests).toHaveLength(0);
+
+    browser.permissions.contains = async () => true;
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(await screen.findByText('GIPHY: Saved, working')).toBeTruthy();
+  });
+});

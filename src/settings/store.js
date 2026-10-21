@@ -89,7 +89,15 @@ export async function getFavourites(browser, provider) {
  * @param {import('../providers/providers.js').ProviderId} provider
  * @param {string[]} ids
  */
-export async function setFavourites(browser, provider, ids) {
-  const { favourites = {} } = await browser.storage.local.get('favourites');
-  await browser.storage.local.set({ favourites: { ...favourites, [provider]: ids } });
+export function setFavourites(browser, provider, ids) {
+  // Writes go one at a time: each reads the stored lists and writes them back, so two at once
+  // (a star on each Provider in quick succession) would otherwise lose one.
+  favouritesWrites = favouritesWrites.then(async () => {
+    const { favourites = {} } = await browser.storage.local.get('favourites');
+    await browser.storage.local.set({ favourites: { ...favourites, [provider]: ids } });
+  });
+  return favouritesWrites;
 }
+
+/** @type {Promise<void>} */
+let favouritesWrites = Promise.resolve();

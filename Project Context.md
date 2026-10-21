@@ -13,9 +13,9 @@ Design agreed through a grilling session on 20/10/2026. Spec written to [docs/sp
 3. #6 Key check and error messages - done (committed), manual check pending
 4. #7 Favourites - done (committed), manual check pending
 5. #9 Keyboard use - done (committed), manual check pending
-6. #10 v1 release (README incl. why the install warning appears, licence, release notes, build) - not started; publishing the GitHub Release is the maintainer's step
+6. #10 v1 release (README incl. why the install warning appears, licence, release notes, build) - in progress; publishing the GitHub Release is the maintainer's step
 7. Draft a Thunderbird feature request for an add-on API to insert remote images into drafts (docs/upstream/) - not started; the maintainer posts it
-8. Code review of #4 to #9 - in progress, then #10, then manual checks by the maintainer
+8. Code review of #4 to #9 - done, fixes committed; manual checks by the maintainer after #10
 
 Install warning decision (22/10/2026): keep the Experiment and explain the "full, unrestricted access" warning in the README; Thunderbird shows it for any add-on with an Experiment and it cannot be softened.
 

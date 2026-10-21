@@ -66,4 +66,14 @@ describe('Using the Picker from the keyboard', () => {
 
     expect(screen.getByRole('button', { name: 'Boom Bang GIF by Atlanta Dream' })).toBeTruthy();
   });
+
+  it('keeps arrow keys working when a star has focus', async () => {
+    await openPicker();
+    const tiles = await gridTiles();
+    tiles[0].parentElement.querySelector('.star').focus();
+
+    await userEvent.keyboard('{ArrowRight}');
+
+    expect(document.activeElement).toBe(tiles[1]);
+  });
 });

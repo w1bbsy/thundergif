@@ -199,6 +199,28 @@ describe('Searching GIPHY in the Picker', () => {
     await waitFor(async () => expect(await firstTileDescription()).toBe('Boom Bang GIF by Atlanta Dream'));
   });
 
+  it('lets More work for the new Provider when a More request for the old one is still running', async () => {
+    const KLIPY_KEY = 'test-klipy-key';
+    const API = `https://api.klipy.com/api/v1/${KLIPY_KEY}/gifs`;
+    const { requests } = await openPicker({
+      storage: { giphyKey: GIPHY_KEY, klipyKey: KLIPY_KEY },
+      routes: [
+        { ...giphyTrending, params: { offset: '0' } },
+        { prefix: 'https://api.giphy.com/v1/gifs/trending', params: { offset: '24' }, fixture: 'giphy-search-cat-24.json', delayMs: 60 },
+        { prefix: `${API}/trending`, params: { page: '1' }, fixture: 'klipy-trending.json' },
+        { prefix: `${API}/trending`, params: { page: '2' }, fixture: 'klipy-search-cat-2.json' },
+      ],
+    });
+    await gridTiles();
+    await userEvent.click(screen.getByRole('button', { name: 'More' }));
+
+    await userEvent.click(screen.getByRole('radio', { name: 'KLIPY' }));
+    await waitFor(async () => expect(await firstTileDescription()).toBe('Happy Hump Day with Cute Horse'));
+    await userEvent.click(screen.getByRole('button', { name: 'More' }));
+
+    await waitFor(() => expect(requests.some((r) => r.searchParams.get('page') === '2')).toBe(true));
+  });
+
   it('keeps the search results when the slower trending reply arrives afterwards', async () => {
     const slowTrending = { ...giphyTrending, delayMs: 50 };
     await openPicker({ routes: [slowTrending, ...searchRoutes.slice(1)], waitForStart: false });

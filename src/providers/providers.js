@@ -9,7 +9,7 @@ import { klipy, KLIPY_ORIGINS } from './klipy.js';
  * @property {string} name
  * @property {string[]} origins host permissions it needs
  * @property {string} attribution text the Provider requires the Picker to show, if any
- * @property {typeof giphy} create
+ * @property {(options: { key: string, rating: import('../settings/store.js').Rating, fetch: typeof globalThis.fetch }) => import('./gif.js').Provider} create
  */
 
 /** @type {Record<ProviderId, ProviderInfo>} */
@@ -20,3 +20,6 @@ export const PROVIDERS = {
 
 /** In the order they are offered. */
 export const PROVIDER_IDS = /** @type {ProviderId[]} */ (Object.keys(PROVIDERS));
+
+/** The Providers' names as a list for messages, e.g. "GIPHY or KLIPY". */
+export const PROVIDER_NAMES = PROVIDER_IDS.map((id) => PROVIDERS[id].name).join(' or ');

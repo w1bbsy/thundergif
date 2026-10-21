@@ -22,6 +22,14 @@
  *   number, passed back to it unchanged), or null when there are no more
  */
 
+/**
+ * What every Provider offers the Picker.
+ * @typedef {object} Provider
+ * @property {(next?: number) => Promise<Page>} trending
+ * @property {(term: string, next?: number) => Promise<Page>} search
+ * @property {(ids: string[]) => Promise<Gif[]>} lookup GIFs by ID in the order given, leaving out missing ones
+ */
+
 export const PAGE_SIZE = 24;
 
 /**
@@ -33,4 +41,14 @@ export const PAGE_SIZE = 24;
 export function inOrder(ids, gifs) {
   const byId = new Map(gifs.map((gif) => [gif.id, gif]));
   return ids.flatMap((id) => byId.get(id) ?? []);
+}
+
+/**
+ * Splits IDs into groups no bigger than a Provider accepts in one lookup.
+ *
+ * @param {string[]} ids
+ * @param {number} size
+ */
+export function batches(ids, size) {
+  return Array.from({ length: Math.ceil(ids.length / size) }, (_, i) => ids.slice(i * size, (i + 1) * size));
 }

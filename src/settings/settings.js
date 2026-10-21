@@ -8,7 +8,7 @@ import {
   setActiveProvider,
 } from './store.js';
 import { PROVIDERS, PROVIDER_IDS } from '../providers/providers.js';
-import { ProviderError } from '../providers/errors.js';
+import { ProviderError } from '../providers/provider-request.js';
 
 /**
  * @typedef {object} SettingsEnv
@@ -24,7 +24,10 @@ export async function startSettings({ document, browser, fetch }) {
   const ratingField = /** @type {HTMLSelectElement} */ (document.getElementById('rating'));
   const keyField = (/** @type {string} */ id) => /** @type {HTMLInputElement} */ (document.getElementById(`${id}-key`));
 
-  /** @type {Record<string, string>} */
+  /**
+   * The key each Provider was last checked with, so unchanged keys are not checked again.
+   * @type {Partial<Record<import('../providers/providers.js').ProviderId, string>>}
+   */
   const savedKeys = {};
   for (const id of PROVIDER_IDS) {
     savedKeys[id] = await getProviderKey(browser, id);
@@ -66,8 +69,15 @@ export async function startSettings({ document, browser, fetch }) {
       const key = keyField(id).value.trim();
       const keyStatus = /** @type {HTMLElement} */ (document.getElementById(`${id}-key-status`));
       if (key === savedKeys[id]) continue;
-      savedKeys[id] = key;
-      keyStatus.textContent = key === '' ? '' : await checkKey(PROVIDERS[id], key, rating, fetch);
+      if (key === '') {
+        savedKeys[id] = key;
+        keyStatus.textContent = '';
+        continue;
+      }
+      const result = await checkKey(browser, PROVIDERS[id], key, rating, fetch);
+      keyStatus.textContent = result.text;
+      // Only a definite answer counts as checked; otherwise the next save tries again.
+      if (result.settled) savedKeys[id] = key;
     }
   });
 
@@ -104,21 +114,30 @@ async function showAccess(document, browser, row, provider) {
 }
 
 /**
- * Runs one test request with a Provider key and describes the outcome.
+ * Runs one test request with a Provider key and describes the outcome. Settled means the key is
+ * known to work or known to be rejected.
  *
+ * @param {any} browser
  * @param {import('../providers/providers.js').ProviderInfo} provider
  * @param {string} key
  * @param {import('./store.js').Rating} rating
  * @param {typeof globalThis.fetch} fetch
+ * @returns {Promise<{ text: string, settled: boolean }>}
  */
-async function checkKey(provider, key, rating, fetch) {
+async function checkKey(browser, provider, key, rating, fetch) {
+  const { name } = provider;
+  if (!(await browser.permissions.contains({ origins: provider.origins }))) {
+    return { text: `${name}: Saved. Allow access to ${name} below so the key can be checked.`, settled: false };
+  }
   try {
     await provider.create({ key, rating, fetch }).trending();
-    return `${provider.name}: Saved, working`;
+    return { text: `${name}: Saved, working`, settled: true };
   } catch (error) {
     const kind = error instanceof ProviderError ? error.kind : 'unreachable';
-    if (kind === 'rejected') return `${provider.name}: Key rejected`;
-    if (kind === 'limit') return `${provider.name}: Saved, but the hourly limit is used up, so the key could not be checked yet`;
-    return `${provider.name}: Saved, but ${provider.name} could not be reached to check the key`;
+    if (kind === 'rejected') return { text: `${name}: Key rejected`, settled: true };
+    if (kind === 'limit') {
+      return { text: `${name}: Saved, but the hourly limit is used up, so the key could not be checked yet`, settled: false };
+    }
+    return { text: `${name}: Saved, but ${name} could not be reached to check the key`, settled: false };
   }
 }

@@ -1,6 +1,6 @@
-import { PROVIDERS, PROVIDER_IDS } from '../providers/providers.js';
+import { PROVIDERS, PROVIDER_IDS, PROVIDER_NAMES } from '../providers/providers.js';
 import { insertIntoCompose, isPlainText } from '../compose/insert.js';
-import { ProviderError } from '../providers/errors.js';
+import { ProviderError } from '../providers/provider-request.js';
 import {
   getProviderKey,
   getRating,
@@ -40,17 +40,20 @@ export async function startPicker(env) {
   const firstId = await getActiveProvider(browser, withKeys);
   if (!firstId) {
     const openSettingsForKey = actionButton(document, 'Open settings', () => browser.runtime.openOptionsPage());
-    showMessage(document, 'Add a GIPHY or KLIPY Provider key in settings to start finding GIFs.', openSettingsForKey);
+    showMessage(document, `Add a ${PROVIDER_NAMES} Provider key in settings to start finding GIFs.`, openSettingsForKey);
     return;
   }
   /** @type {import('../providers/providers.js').ProviderInfo} */
   let info = PROVIDERS[firstId];
-  /** @type {ReturnType<typeof info.create>} */
+  /** @type {import('../providers/gif.js').Provider} */
   let provider = info.create({ key: /** @type {string} */ (keys[firstId]), rating, fetch: env.fetch });
   const attribution = /** @type {HTMLElement} */ (document.querySelector('.attribution'));
   let activeId = firstId;
-  /** @type {string[]} newest first */
-  let favourites = [];
+  /**
+   * Each Provider's Favourite IDs, newest first, once loaded.
+   * @type {Partial<Record<import('../providers/providers.js').ProviderId, string[]>>}
+   */
+  const favouritesOf = {};
   const browseTab = /** @type {HTMLButtonElement} */ (document.querySelector('[role="tab"].browse'));
   const favouritesTab = /** @type {HTMLButtonElement} */ (document.querySelector('[role="tab"].favourites'));
   /** @param {HTMLButtonElement} tab */
@@ -58,19 +61,31 @@ export async function startPicker(env) {
     for (const each of [browseTab, favouritesTab]) each.setAttribute('aria-selected', String(each === tab));
   };
 
-  /** @param {import('../providers/gif.js').Gif} gif */
-  const toggleFavourite = (gif) => {
-    favourites = favourites.includes(gif.id) ? favourites.filter((id) => id !== gif.id) : [gif.id, ...favourites];
-    setFavourites(browser, activeId, favourites);
-    return favourites.includes(gif.id);
+  /**
+   * Stars or unstars a GIF in the list of the Provider it came from, which may no longer be the
+   * active one if the user has just switched.
+   * @param {import('../providers/providers.js').ProviderId} id
+   * @param {import('../providers/gif.js').Gif} gif
+   */
+  const toggleFavourite = (id, gif) => {
+    const list = favouritesOf[id] ?? [];
+    const updated = list.includes(gif.id) ? list.filter((each) => each !== gif.id) : [gif.id, ...list];
+    favouritesOf[id] = updated;
+    setFavourites(browser, id, updated);
+    return updated.includes(gif.id);
   };
 
   const grid = /** @type {HTMLUListElement} */ (document.querySelector('.grid'));
   const more = /** @type {HTMLButtonElement} */ (document.querySelector('button.more'));
-  const tiles = (/** @type {import('../providers/gif.js').Gif[]} */ gifs) =>
-    gifs.map((gif) =>
-      tile(document, gif, () => insert(env, gif), { starred: favourites.includes(gif.id), toggle: () => toggleFavourite(gif) }),
+  const tiles = (/** @type {import('../providers/gif.js').Gif[]} */ gifs) => {
+    const id = activeId;
+    return gifs.map((gif) =>
+      tile(document, gif, () => insert(env, gif), {
+        starred: (favouritesOf[id] ?? []).includes(gif.id),
+        toggle: () => toggleFavourite(id, gif),
+      }),
     );
+  };
   /** @param {unknown} error */
   const failed = (error) => {
     const kind = error instanceof ProviderError ? error.kind : 'unreachable';
@@ -128,7 +143,7 @@ export async function startPicker(env) {
     } catch (error) {
       if (mine === generation) failed(error);
     } finally {
-      loadingMore = false;
+      if (mine === generation) loadingMore = false;
     }
   });
 
@@ -167,6 +182,7 @@ export async function startPicker(env) {
     clearTimeout(typingTimer);
     shownTerm = null;
     selectTab(favouritesTab);
+    const favourites = favouritesOf[activeId] ?? [];
     if (favourites.length === 0) {
       generation++;
       grid.replaceChildren();
@@ -183,13 +199,19 @@ export async function startPicker(env) {
     search(searchBox.value.trim());
   });
 
+  let activation = 0;
   /**
    * Makes a Provider the one the Picker searches, starting again from its trending GIFs.
    * @param {import('../providers/providers.js').ProviderId} id
    */
   const activate = async (id) => {
+    // A later switch wins if the user changes Provider again while this one is still loading.
+    const mine = ++activation;
+    const favourites = favouritesOf[id] ?? (await getFavourites(browser, id));
+    if (mine !== activation) return;
+    favouritesOf[id] = favourites;
     activeId = id;
-    favourites = await getFavourites(browser, id);
+    loadingMore = false;
     selectTab(browseTab);
     info = PROVIDERS[id];
     provider = info.create({ key: /** @type {string} */ (keys[id]), rating, fetch: env.fetch });
@@ -204,7 +226,9 @@ export async function startPicker(env) {
     generation++;
     grid.replaceChildren();
     setNext(null);
-    if (!(await browser.permissions.contains({ origins: info.origins }))) {
+    const allowed = await browser.permissions.contains({ origins: info.origins });
+    if (mine !== activation) return;
+    if (!allowed) {
       searchBox.disabled = true;
       // Permission prompts are unreliable from a popup, so the settings page (a full tab) asks.
       const openSettings = actionButton(document, 'Open settings', () => browser.runtime.openOptionsPage());
@@ -266,7 +290,9 @@ function keyboard(env, searchBox, event) {
     if (event.key === 'ArrowDown' && tiles.length > 0) focusTile(0);
     return;
   }
-  const at = tiles.indexOf(/** @type {HTMLButtonElement} */ (focused));
+  // A focused star moves as if its tile had focus.
+  const tileButton = focused?.classList.contains('star') ? focused.parentElement?.querySelector('button:not(.star)') : focused;
+  const at = tiles.indexOf(/** @type {HTMLButtonElement} */ (tileButton));
   if (at === -1) return;
   if (event.key === 'ArrowRight') focusTile(at + 1);
   else if (event.key === 'ArrowLeft') focusTile(at - 1);
