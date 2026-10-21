@@ -4,7 +4,7 @@ Personal project, not connected to Averion Strategy. Vocabulary lives in [GLOSSA
 
 ## Status
 
-Design agreed through a grilling session on 20/10/2026. Spec written to [docs/spec.md](docs/spec.md) on 20/10/2026, kept in the repo as the reference design. Broken into ten tickets on 20/10/2026, now GitHub issues #1 to #10 with native blocking links and the ready-for-agent label (#1 is the starting point; #2, #3, and #8 can run in parallel after it). Agent skills configured 20/10/2026: GitHub Issues, default triage labels, single-context domain docs (see CLAUDE.md). Public GitHub repo created 20/10/2026: https://github.com/w1bbsy/thundergif . Issue #1 (walking skeleton) implemented 21/10/2026. Manual check 21/10/2026: install, key, trending, attribution, insert at cursor, undo, and sent-as-link all passed; GIFs showed broken in the draft. Fixed 22/10/2026 with an Experiment (see docs/adr/0001), verified by the real-Thunderbird check; final manual check of 0.1.2 passed 22/10/2026; issue #1 closed.
+Design agreed through a grilling session on 20/10/2026. Spec written to [docs/spec.md](docs/spec.md) on 20/10/2026, kept in the repo as the reference design. Broken into ten tickets on 20/10/2026, now GitHub issues #1 to #10 with native blocking links and the ready-for-agent label (#1 is the starting point; #2, #3, and #8 can run in parallel after it). Agent skills configured 20/10/2026: GitHub Issues, default triage labels, single-context domain docs (see CLAUDE.md). Public GitHub repo created 20/10/2026: https://github.com/w1bbsy/thundergif . Issue #1 (walking skeleton) implemented 21/10/2026. Manual check 21/10/2026: install, key, trending, attribution, insert at cursor, undo, and sent-as-link all passed; GIFs showed broken in the draft. Fixed 22/10/2026 with an Experiment (see docs/adr/0001), verified by the real-Thunderbird check; final manual check of 0.1.2 passed 22/10/2026; issue #1 closed. Issues #2, #3, #8 implemented 22/10/2026 (0.2.0), awaiting manual check; #11 icon drafted, awaiting approval.
 
 ## Decisions
 
@@ -41,6 +41,15 @@ Design agreed through a grilling session on 20/10/2026. Spec written to [docs/sp
 - `compose` permission kept alongside `scripting` for injecting into compose tabs; confirm in the manual check.
 - The Picker already shows a minimal "no Provider key" message with an Open settings button; issue #6 should refine it rather than add a second one.
 - Firefox's linter asks for `data_collection_permissions`; handle in issue #10.
+
+## Build notes (issues #2, #3, #8)
+
+- Search runs on Enter (no search-as-you-type), to spare the 100 requests an hour. Emptying the box returns to trending.
+- A newer listing always wins: replies for an older search or page are dropped, and More ignores repeat clicks while loading.
+- A failed GIPHY request shows "could not reach GIPHY"; issue #6 will add specific messages (rate limit, bad key, offline).
+- Rating values are stored as GIPHY's strings (g, pg, pg-13, r). KLIPY (#4) must translate them in its adapter.
+- Plain-text emails get the GIF's medium media URL typed at the cursor (undoable insertText).
+- `checks/thunderbird/check.py` now also checks the plain-text path in a real Thunderbird.
 
 ## Required by Provider terms
 

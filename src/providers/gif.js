@@ -15,4 +15,10 @@
  * @property {Rendition} insert medium version placed in the email
  */
 
+/**
+ * @typedef {object} Page
+ * @property {Gif[]} gifs
+ * @property {number | null} next offset of the following page, or null when there are no more
+ */
+
 export const PAGE_SIZE = 24;

@@ -20,18 +20,40 @@ export const GIPHY_ORIGINS = [
 ];
 
 /**
- * @param {{ key: string, fetch: typeof globalThis.fetch }} options
+ * @param {{ key: string, rating: import('../settings/store.js').Rating, fetch: typeof globalThis.fetch }} options
  */
-export function giphy({ key, fetch }) {
+export function giphy({ key, rating, fetch }) {
+  /**
+   * @param {string} endpoint
+   * @param {Record<string, string>} params
+   * @param {number} offset
+   * @returns {Promise<import('./gif.js').Page>}
+   */
+  async function page(endpoint, params, offset) {
+    const url = new URL(`${API}/${endpoint}`);
+    url.search = new URLSearchParams({
+      api_key: key,
+      limit: String(PAGE_SIZE),
+      offset: String(offset),
+      // GIPHY's rating values match Thundergif's Rating values.
+      rating,
+      ...params,
+    }).toString();
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`GIPHY responded ${response.status}`);
+    const body = await response.json();
+    const { offset: start, count, total_count: total } = body.pagination;
+    return { gifs: body.data.map(toGif), next: count > 0 && start + count < total ? start + count : null };
+  }
+
   return {
-    /** @returns {Promise<import('./gif.js').Gif[]>} */
-    async trending() {
-      const url = new URL(`${API}/trending`);
-      url.search = new URLSearchParams({ api_key: key, limit: String(PAGE_SIZE), offset: '0', rating: 'pg' }).toString();
-      const response = await fetch(url);
-      const body = await response.json();
-      return body.data.map(toGif);
-    },
+    /** @param {number} [offset] */
+    trending: (offset = 0) => page('trending', {}, offset),
+    /**
+     * @param {string} term
+     * @param {number} [offset]
+     */
+    search: (term, offset = 0) => page('search', { q: term }, offset),
   };
 }
 

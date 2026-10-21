@@ -8,8 +8,13 @@
   </head>
   <body>
     <main class="picker">
+      <form class="search" role="search">
+        <input type="search" name="q" aria-label="Search GIPHY" placeholder="Search GIPHY" autocomplete="off" disabled />
+      </form>
+      <p class="note" hidden>This email is plain text, so Thundergif will paste a link to the GIF.</p>
       <p class="message" role="status" hidden></p>
       <ul class="grid" aria-label="GIFs"></ul>
+      <button type="button" class="more" hidden>More</button>
       <footer class="attribution">Powered By GIPHY</footer>
     </main>
   </body>

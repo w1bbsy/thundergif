@@ -42,4 +42,28 @@ describe('Settings page', () => {
     expect(await screen.findByText('Access to GIPHY allowed')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Allow access to GIPHY' })).toBeNull();
   });
+
+  it('offers the four Ratings with PG chosen when none has been saved', async () => {
+    await openSettings();
+
+    const rating = screen.getByLabelText('Rating');
+    expect(Array.from(rating.options, (o) => o.textContent)).toEqual(['G', 'PG', 'PG-13', 'R']);
+    expect(rating.selectedOptions[0].textContent).toBe('PG');
+  });
+
+  it('saves the chosen Rating', async () => {
+    const { stored } = await openSettings({ storage: { giphyKey: 'saved-key' } });
+
+    await userEvent.selectOptions(screen.getByLabelText('Rating'), 'PG-13');
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(stored.rating).toBe('pg-13');
+    expect(stored.giphyKey).toBe('saved-key');
+  });
+
+  it('shows the Rating already saved', async () => {
+    await openSettings({ storage: { rating: 'r' } });
+
+    expect(screen.getByLabelText('Rating').selectedOptions[0].textContent).toBe('R');
+  });
 });

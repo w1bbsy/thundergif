@@ -1,4 +1,4 @@
-import { getGiphyKey, setGiphyKey } from './store.js';
+import { getGiphyKey, setGiphyKey, getRating, setRating, RATINGS } from './store.js';
 import { GIPHY_ORIGINS } from '../providers/giphy.js';
 
 /**
@@ -13,11 +13,16 @@ export async function startSettings({ document, browser }) {
   const keyField = /** @type {HTMLInputElement} */ (document.getElementById('giphy-key'));
   const status = /** @type {HTMLElement} */ (document.querySelector('.status'));
 
+  const ratingField = /** @type {HTMLSelectElement} */ (document.getElementById('rating'));
+
   keyField.value = await getGiphyKey(browser);
+  ratingField.replaceChildren(...RATINGS.map(({ value, label }) => new Option(label, value)));
+  ratingField.value = await getRating(browser);
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     await setGiphyKey(browser, keyField.value.trim());
+    await setRating(browser, /** @type {import('./store.js').Rating} */ (ratingField.value));
     status.textContent = 'Saved';
   });
 

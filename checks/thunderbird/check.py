@@ -1,4 +1,5 @@
-"""Real-Thunderbird check: does a GIF inserted by Thundergif show in the draft?
+"""Real-Thunderbird check: does a GIF inserted by Thundergif show in an HTML draft, and is
+its link pasted into a plain-text draft?
 
 Starts a throwaway, headless Thunderbird with an empty profile (no access to your own
 profile, accounts or mail), installs a check build of the add-on, opens a new HTML draft,
@@ -9,7 +10,7 @@ Usage: python checks/thunderbird/check.py [path-to-src] [--headed]
 Needs Thunderbird installed and `pip install -r checks/thunderbird/requirements.txt`.
 Exit code 0 = pass, 1 = fail.
 """
-import json, os, shutil, subprocess, sys, tempfile, time, zipfile
+import json, os, re, shutil, subprocess, sys, tempfile, time, zipfile
 from marionette_driver.marionette import Marionette
 from marionette_driver.addons import Addons
 
@@ -18,6 +19,8 @@ SRC = next((a for a in sys.argv[1:] if not a.startswith('--')), os.path.join(HER
 HEADLESS = '--headed' not in sys.argv
 THUNDERBIRD = os.environ.get('THUNDERBIRD', '/Applications/Thunderbird.app/Contents/MacOS/thunderbird')
 PORT = 2931
+# The GIF the check build inserts, read from check-background.js so the two cannot drift.
+GIF_URL = re.search(r"url: '([^']+)'", open(os.path.join(HERE, 'check-background.js')).read()).group(1)
 
 PREFS = {
     'marionette.port': PORT,
@@ -51,10 +54,21 @@ OPEN_DRAFT = """
 const { MailServices } = ChromeUtils.importESModule("resource:///modules/MailServices.sys.mjs");
 const params = Cc["@mozilla.org/messengercompose/composeparams;1"].createInstance(Ci.nsIMsgComposeParams);
 params.type = Ci.nsIMsgCompType.New;
-params.format = Ci.nsIMsgCompFormat.HTML;
+params.format = arguments[0] ? Ci.nsIMsgCompFormat.PlainText : Ci.nsIMsgCompFormat.HTML;
 params.identity = MailServices.accounts.defaultAccount.defaultIdentity;
 params.composeFields = Cc["@mozilla.org/messengercompose/composefields;1"].createInstance(Ci.nsIMsgCompFields);
 MailServices.compose.OpenComposeWindowWithParams(null, params);
+"""
+
+CLOSE_DRAFT = """
+const win = Services.wm.getMostRecentWindow("msgcompose");
+win.gMsgCompose.bodyModified = false;
+win.close();
+"""
+
+DRAFT_TEXT = """
+const win = Services.wm.getMostRecentWindow("msgcompose");
+return win ? win.GetCurrentEditorElement().contentDocument.body.textContent : null;
 """
 
 DRAFT_IMAGES = """
@@ -101,16 +115,29 @@ def main():
         client.set_context(client.CONTEXT_CHROME)
         Addons(client).install(xpi, temp=True)
         time.sleep(1)
-        client.execute_script(OPEN_DRAFT)
+        client.execute_script(OPEN_DRAFT, script_args=[False])
         images = None
         for _ in range(30):
             time.sleep(0.5)
             images = client.execute_script(DRAFT_IMAGES)
             if images and all(i['complete'] for i in images):
                 break
-        print('Images in draft:', json.dumps(images))
-        ok = bool(images) and all(i['naturalWidth'] > 0 and i['mozDoNotSend'] == 'true' for i in images)
-        print('PASS: inserted GIF shows in the draft as a link' if ok else 'FAIL: inserted GIF missing or not shown')
+        print('HTML draft images:', json.dumps(images))
+        html_ok = bool(images) and all(i['naturalWidth'] > 0 and i['mozDoNotSend'] == 'true' for i in images)
+        print('PASS: GIF shows in the HTML draft as a link' if html_ok else 'FAIL: GIF missing or not shown in the HTML draft')
+
+        client.execute_script(CLOSE_DRAFT)
+        time.sleep(1)
+        client.execute_script(OPEN_DRAFT, script_args=[True])
+        text = ''
+        for _ in range(30):
+            time.sleep(0.5)
+            text = client.execute_script(DRAFT_TEXT) or ''
+            if 'giphy.com' in text:
+                break
+        plain_ok = GIF_URL in text and client.execute_script(DRAFT_IMAGES) == []
+        print('PASS: GIF link typed into the plain-text draft' if plain_ok else f'FAIL: plain-text draft holds {text!r}')
+        ok = html_ok and plain_ok
         return 0 if ok else 1
     finally:
         thunderbird.terminate()

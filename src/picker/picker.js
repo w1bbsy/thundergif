@@ -1,6 +1,6 @@
 import { giphy, GIPHY_ORIGINS } from '../providers/giphy.js';
-import { insertIntoCompose } from '../compose/insert.js';
-import { getGiphyKey } from '../settings/store.js';
+import { insertIntoCompose, isPlainText } from '../compose/insert.js';
+import { getGiphyKey, getRating } from '../settings/store.js';
 
 /**
  * @typedef {object} PickerEnv
@@ -13,23 +13,90 @@ import { getGiphyKey } from '../settings/store.js';
 /** @param {PickerEnv} env */
 export async function startPicker(env) {
   const { document, browser } = env;
+  const searchBox = /** @type {HTMLInputElement} */ (document.querySelector('form.search input'));
+  const composeTab = await findComposeTab(browser);
+  if (composeTab && (await isPlainText(browser, composeTab.id))) {
+    /** @type {HTMLElement} */ (document.querySelector('.note')).hidden = false;
+  }
   const giphyKey = await getGiphyKey(browser);
   if (!giphyKey) {
     const openSettingsForKey = actionButton(document, 'Open settings', () => browser.runtime.openOptionsPage());
     showMessage(document, 'Add a GIPHY Provider key in settings to start finding GIFs.', openSettingsForKey);
     return;
   }
-  const provider = giphy({ key: giphyKey, fetch: env.fetch });
+  const provider = giphy({ key: giphyKey, rating: await getRating(browser), fetch: env.fetch });
 
-  const showTrending = async () => {
-    hideMessage(document);
-    const gifs = await provider.trending();
-    const grid = /** @type {HTMLUListElement} */ (document.querySelector('.grid'));
-    grid.replaceChildren(...gifs.map((gif) => tile(document, gif, () => insert(env, gif))));
+  const grid = /** @type {HTMLUListElement} */ (document.querySelector('.grid'));
+  const more = /** @type {HTMLButtonElement} */ (document.querySelector('button.more'));
+  const tiles = (/** @type {import('../providers/gif.js').Gif[]} */ gifs) =>
+    gifs.map((gif) => tile(document, gif, () => insert(env, gif)));
+  const unreachable = () => showMessage(document, 'Thundergif could not reach GIPHY. Try again in a moment.');
+
+  /** @typedef {(offset: number) => Promise<import('../providers/gif.js').Page>} PageSource */
+  /** @type {{ source: PageSource, next: number | null, isSearch: boolean }} */
+  let listing = { source: provider.trending, next: null, isSearch: false };
+  // Each new listing bumps this, so replies for an older listing are ignored when they arrive.
+  let generation = 0;
+  let loadingMore = false;
+
+  /** @param {number | null} next */
+  const setNext = (next) => {
+    listing.next = next;
+    more.hidden = next === null;
   };
 
+  /**
+   * @param {PageSource} source
+   * @param {boolean} isSearch
+   * @param {string} [emptyText] what to say when there are no results
+   */
+  const show = async (source, isSearch, emptyText = 'No GIFs to show right now.') => {
+    const mine = ++generation;
+    hideMessage(document);
+    try {
+      const page = await source(0);
+      if (mine !== generation) return;
+      grid.replaceChildren(...tiles(page.gifs));
+      listing = { source, next: null, isSearch };
+      setNext(page.next);
+      if (page.gifs.length === 0) showMessage(document, emptyText);
+    } catch {
+      if (mine === generation) unreachable();
+    }
+  };
+
+  more.addEventListener('click', async () => {
+    if (loadingMore || listing.next === null) return;
+    loadingMore = true;
+    const mine = generation;
+    try {
+      const page = await listing.source(listing.next);
+      if (mine !== generation) return;
+      grid.append(...tiles(page.gifs));
+      setNext(page.next);
+    } catch {
+      if (mine === generation) unreachable();
+    } finally {
+      loadingMore = false;
+    }
+  });
+
+  const form = /** @type {HTMLFormElement} */ (document.querySelector('form.search'));
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const term = searchBox.value.trim();
+    if (term === '') show(provider.trending, false);
+    else show((offset) => provider.search(term, offset), true, `No GIFs found for "${term}". Try different words.`);
+  });
+  // Emptying the box (by deleting the text or its clear button) goes back to trending.
+  searchBox.addEventListener('input', () => {
+    if (searchBox.value.trim() === '' && listing.isSearch) show(provider.trending, false);
+  });
+
   if (await browser.permissions.contains({ origins: GIPHY_ORIGINS })) {
-    await showTrending();
+    searchBox.disabled = false;
+    searchBox.focus();
+    await show(provider.trending, false);
     return;
   }
   // Permission prompts are unreliable from a popup, so the settings page (a full tab) asks.
@@ -42,8 +109,8 @@ export async function startPicker(env) {
  * @param {import('../providers/gif.js').Gif} gif
  */
 async function insert(env, gif) {
-  const [tab] = await env.browser.tabs.query({ active: true, currentWindow: true });
-  if (tab?.type === 'messageCompose' && (await insertIntoCompose(env.browser, tab.id, gif))) {
+  const tab = await findComposeTab(env.browser);
+  if (tab && (await insertIntoCompose(env.browser, tab.id, gif))) {
     env.close();
     return;
   }
@@ -106,4 +173,15 @@ function actionButton(document, label, onClick) {
   button.textContent = label;
   button.addEventListener('click', onClick);
   return button;
+}
+
+/**
+ * The compose tab this Picker belongs to, or null if it is not attached to one.
+ *
+ * @param {any} browser
+ * @returns {Promise<{ id: number } | null>}
+ */
+async function findComposeTab(browser) {
+  const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+  return tab?.type === 'messageCompose' ? tab : null;
 }

@@ -19,7 +19,7 @@ export function loadPage(relativePath) {
 
 const declaredOrigins = JSON.parse(readFileSync(join(root, 'manifest.json'), 'utf8')).host_permissions;
 
-export function fakeThunderbird({ storage = {}, granted = true, editorAccepts = true } = {}) {
+export function fakeThunderbird({ storage = {}, granted = true, editorAccepts = true, plainText = false } = {}) {
   const stored = structuredClone(storage);
   const compose = new JSDOM('<!doctype html><html><body><p>Hello </p></body></html>', {
     runScripts: 'outside-only',
@@ -37,9 +37,18 @@ export function fakeThunderbird({ storage = {}, granted = true, editorAccepts = 
 
   // The simulated browser has no editing commands, so stand in for the compose editor's insertImage.
   composeDoc.execCommand = (command, _showUi, value) => {
-    if (command !== 'insertImage' || !editorAccepts) return false;
+    if (!editorAccepts) return false;
     const selection = compose.window.getSelection();
     const at = selection.getRangeAt(0);
+    if (command === 'insertText') {
+      const text = composeDoc.createTextNode(value);
+      at.insertNode(text);
+      at.setStartAfter(text);
+      at.collapse(true);
+      return true;
+    }
+    // The add-on never inserts images into plain-text emails, so the fake refuses them there.
+    if (command !== 'insertImage' || plainText) return false;
     const img = composeDoc.createElement('img');
     img.setAttribute('src', value);
     if (!draft.allowRemoteContent) draft.blocked.add(img);
@@ -68,6 +77,12 @@ export function fakeThunderbird({ storage = {}, granted = true, editorAccepts = 
     },
     tabs: {
       query: async () => [{ id: 7, type: 'messageCompose' }],
+    },
+    compose: {
+      async getComposeDetails(tabId) {
+        if (tabId !== 7) throw new Error('Unknown tab');
+        return { isPlainText: plainText };
+      },
     },
     scripting: {
       injections: [],
@@ -98,8 +113,13 @@ export function fakeNetwork(routes) {
   async function fetch(input) {
     const url = new URL(String(input));
     requests.push(url);
-    const match = routes.find((r) => url.href.startsWith(r.prefix));
+    const match = routes.find(
+      (r) =>
+        url.href.startsWith(r.prefix) &&
+        Object.entries(r.params ?? {}).every(([name, value]) => url.searchParams.get(name) === value),
+    );
     if (!match) throw new TypeError(`Unexpected request: ${url.origin}${url.pathname}`);
+    if (match.delayMs) await new Promise((resolve) => setTimeout(resolve, match.delayMs));
     const body = match.fixture
       ? readFileSync(join(fixtures, match.fixture), 'utf8')
       : JSON.stringify(match.json ?? {});
