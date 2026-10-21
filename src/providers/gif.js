@@ -1,0 +1,18 @@
+// The GIF shape every Provider returns, so the Picker never sees a Provider's own response layout.
+
+/**
+ * @typedef {object} Rendition
+ * @property {string} url
+ * @property {number} width
+ * @property {number} height
+ */
+
+/**
+ * @typedef {object} Gif
+ * @property {string} id
+ * @property {string} description
+ * @property {Rendition} preview small version shown in the Picker
+ * @property {Rendition} insert medium version placed in the email
+ */
+
+export const PAGE_SIZE = 24;

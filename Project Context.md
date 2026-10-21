@@ -4,7 +4,7 @@ Personal project, not connected to Averion Strategy. Vocabulary lives in [GLOSSA
 
 ## Status
 
-Design agreed through a grilling session on 20/10/2026. Spec written to [docs/spec.md](docs/spec.md) on 20/10/2026, kept in the repo as the reference design. Broken into ten tickets on 20/10/2026, now GitHub issues #1 to #10 with native blocking links and the ready-for-agent label (#1 is the starting point; #2, #3, and #8 can run in parallel after it). Agent skills configured 20/10/2026: GitHub Issues, default triage labels, single-context domain docs (see CLAUDE.md). Public GitHub repo created 20/10/2026: https://github.com/w1bbsy/thundergif . No code written yet.
+Design agreed through a grilling session on 20/10/2026. Spec written to [docs/spec.md](docs/spec.md) on 20/10/2026, kept in the repo as the reference design. Broken into ten tickets on 20/10/2026, now GitHub issues #1 to #10 with native blocking links and the ready-for-agent label (#1 is the starting point; #2, #3, and #8 can run in parallel after it). Agent skills configured 20/10/2026: GitHub Issues, default triage labels, single-context domain docs (see CLAUDE.md). Public GitHub repo created 20/10/2026: https://github.com/w1bbsy/thundergif . Issue #1 (walking skeleton) implemented 21/10/2026, awaiting the manual check in Thunderbird 158.
 
 ## Decisions
 
@@ -29,6 +29,15 @@ Design agreed through a grilling session on 20/10/2026. Spec written to [docs/sp
 | 17 | Licence | MIT |
 | 18 | GIPHY pingbacks | Not sent. README says so; add later only if a production key requires it |
 | 19 | Key check | Settings page runs one test search on saving a Provider key and shows "Saved, working" or "Key rejected" |
+
+## Build notes (issue #1)
+
+- Host permission is `https://api.giphy.com/*` only. GIPHY media loads as plain images in the Picker and the compose editor, which needs no host permission, so media hosts are left out (narrower than the issue's wording; fewer permissions helps ATN review).
+- GIFs go in through the editor's `insertImage` command, which takes only the URL (no HTML is parsed) and keeps undo. Alt text, size, and `moz-do-not-send` are set on the inserted image afterwards. If the editor refuses, the Picker says so and stays open; there is no silent fallback.
+- `compose` permission kept alongside `scripting` for injecting into compose tabs; confirm in the manual check.
+- The Picker already shows a minimal "no Provider key" message with an Open settings button; issue #6 should refine it rather than add a second one.
+- The Picker can ask for a revoked GIPHY permission. The popup may close while the prompt shows; reopening it should then work. Check manually.
+- Firefox's linter asks for `data_collection_permissions`; handle in issue #10.
 
 ## Required by Provider terms
 

@@ -1,0 +1,33 @@
+{
+  "name": "thundergif",
+  "version": "0.1.0",
+  "description": "Thunderbird add-on: search GIPHY or KLIPY and insert a GIF into an email",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p .",
+    "build": "scripts/build.sh",
+    "lint": "addons-linter dist/thundergif-*.xpi"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/w1bbsy/thundergif.git"
+  },
+  "license": "MIT",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/w1bbsy/thundergif/issues"
+  },
+  "homepage": "https://github.com/w1bbsy/thundergif#readme",
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/user-event": "^14.6.8",
+    "addons-linter": "^10.14.0",
+    "jsdom": "^30.1.3",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  },
+  "private": true
+}
