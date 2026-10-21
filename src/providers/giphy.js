@@ -4,8 +4,20 @@ import { PAGE_SIZE } from './gif.js';
 
 const API = 'https://api.giphy.com/v1/gifs';
 
-/** Host permissions the add-on needs to reach GIPHY. Media loads as plain images and needs none. */
-export const GIPHY_ORIGINS = ['https://api.giphy.com/*'];
+/**
+ * Host permissions the add-on needs for GIPHY: the API, plus the media servers, because a GIF
+ * placed in the compose editor by the add-on is loaded on the add-on's behalf.
+ */
+export const GIPHY_ORIGINS = [
+  'https://api.giphy.com/*',
+  'https://media.giphy.com/*',
+  'https://media0.giphy.com/*',
+  'https://media1.giphy.com/*',
+  'https://media2.giphy.com/*',
+  'https://media3.giphy.com/*',
+  'https://media4.giphy.com/*',
+  'https://i.giphy.com/*',
+];
 
 /**
  * @param {{ key: string, fetch: typeof globalThis.fetch }} options

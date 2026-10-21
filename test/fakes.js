@@ -17,6 +17,8 @@ export function loadPage(relativePath) {
   document.body.innerHTML = parsed.body.innerHTML;
 }
 
+const declaredOrigins = JSON.parse(readFileSync(join(root, 'manifest.json'), 'utf8')).host_permissions;
+
 export function fakeThunderbird({ storage = {}, granted = true, editorAccepts = true } = {}) {
   const stored = structuredClone(storage);
   const compose = new JSDOM('<!doctype html><html><body><p>Hello </p></body></html>', {
@@ -54,8 +56,9 @@ export function fakeThunderbird({ storage = {}, granted = true, editorAccepts = 
       },
     },
     permissions: {
-      contains: async () => granted,
-      request: async () => (granted = true),
+      // Like Thunderbird, only grant origins the manifest declares.
+      contains: async ({ origins }) => granted && origins.every((o) => declaredOrigins.includes(o)),
+      request: async ({ origins }) => (granted = origins.every((o) => declaredOrigins.includes(o))),
     },
     tabs: {
       query: async () => [{ id: 7, type: 'messageCompose' }],

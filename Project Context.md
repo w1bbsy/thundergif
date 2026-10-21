@@ -32,7 +32,8 @@ Design agreed through a grilling session on 20/10/2026. Spec written to [docs/sp
 
 ## Build notes (issue #1)
 
-- Host permission is `https://api.giphy.com/*` only. GIPHY media loads as plain images in the Picker and the compose editor, which needs no host permission, so media hosts are left out (narrower than the issue's wording; fewer permissions helps ATN review).
+- Host permissions cover GIPHY's API and media servers (media, media0 to media4, i.giphy.com). API-only (0.1.0) showed a broken image in the draft: a GIF the add-on places in the compose editor is loaded on the add-on's behalf, so its server must be declared. Recipients were unaffected. KLIPY (#4) will need its media hosts for the same reason.
+- The compose editor never animates GIFs, including manually inserted ones; recipients see them animate.
 - GIFs go in through the editor's `insertImage` command, which takes only the URL (no HTML is parsed) and keeps undo. Alt text, size, and `moz-do-not-send` are set on the inserted image afterwards. If the editor refuses, the Picker says so and stays open; there is no silent fallback.
 - `compose` permission kept alongside `scripting` for injecting into compose tabs; confirm in the manual check.
 - The Picker already shows a minimal "no Provider key" message with an Open settings button; issue #6 should refine it rather than add a second one.
