@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Thundergif",
-  "version": "0.2.0",
+  "version": "0.2.3",
   "description": "Search GIPHY or KLIPY and insert a GIF into the email you are writing.",
   "browser_specific_settings": {
     "gecko": {
@@ -10,14 +10,30 @@
     }
   },
   "icons": {
-    "32": "icons/thundergif.svg",
-    "64": "icons/thundergif.svg"
+    "32": "icons/thundergif-32.png",
+    "64": "icons/thundergif-64.png",
+    "128": "icons/thundergif-128.png"
   },
   "compose_action": {
     "default_popup": "picker/picker.html",
     "default_title": "Insert a GIF",
-    "default_icon": "icons/thundergif.svg",
-    "default_area": "maintoolbar"
+    "default_icon": {
+      "16": "icons/toolbar-light-16.png",
+      "32": "icons/toolbar-light-32.png"
+    },
+    "default_area": "maintoolbar",
+    "theme_icons": [
+      {
+        "light": "icons/toolbar-dark-16.png",
+        "dark": "icons/toolbar-light-16.png",
+        "size": 16
+      },
+      {
+        "light": "icons/toolbar-dark-32.png",
+        "dark": "icons/toolbar-light-32.png",
+        "size": 32
+      }
+    ]
   },
   "options_ui": {
     "page": "settings/settings.html"
