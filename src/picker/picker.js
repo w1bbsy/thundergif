@@ -24,6 +24,7 @@ export async function startPicker(env) {
   const { document, browser } = env;
   const searchBox = /** @type {HTMLInputElement} */ (document.querySelector('form.search input'));
   document.querySelector('button.settings')?.addEventListener('click', () => browser.runtime.openOptionsPage());
+  document.querySelector('main.picker')?.addEventListener('keydown', (event) => keyboard(env, searchBox, /** @type {KeyboardEvent} */ (event)));
   const composeTab = await findComposeTab(browser);
   if (composeTab && (await isPlainText(browser, composeTab.id))) {
     /** @type {HTMLElement} */ (document.querySelector('.note')).hidden = false;
@@ -236,6 +237,45 @@ export async function startPicker(env) {
     choice.hidden = false;
   }
   await activate(firstId);
+}
+
+/** How many tiles make one row of the grid. */
+const COLUMNS = 3;
+
+/**
+ * Keyboard use: Escape closes the Picker, the down arrow moves from the search box into the
+ * results, and the arrow keys move between tiles (Enter on a tile inserts it, as for any button).
+ *
+ * @param {PickerEnv} env
+ * @param {HTMLInputElement} searchBox
+ * @param {KeyboardEvent} event
+ */
+function keyboard(env, searchBox, event) {
+  if (event.key === 'Escape') {
+    env.close();
+    return;
+  }
+  const tiles = /** @type {HTMLButtonElement[]} */ ([...env.document.querySelectorAll('.grid li > button:not(.star)')]);
+  const focused = env.document.activeElement;
+  /** @param {number} index */
+  const focusTile = (index) => {
+    event.preventDefault();
+    tiles[Math.max(0, Math.min(index, tiles.length - 1))]?.focus();
+  };
+  if (focused === searchBox) {
+    if (event.key === 'ArrowDown' && tiles.length > 0) focusTile(0);
+    return;
+  }
+  const at = tiles.indexOf(/** @type {HTMLButtonElement} */ (focused));
+  if (at === -1) return;
+  if (event.key === 'ArrowRight') focusTile(at + 1);
+  else if (event.key === 'ArrowLeft') focusTile(at - 1);
+  else if (event.key === 'ArrowDown') focusTile(at + COLUMNS);
+  else if (event.key === 'ArrowUp') {
+    event.preventDefault();
+    if (at < COLUMNS) searchBox.focus();
+    else focusTile(at - COLUMNS);
+  }
 }
 
 /**
