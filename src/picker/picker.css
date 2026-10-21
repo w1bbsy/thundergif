@@ -106,3 +106,18 @@ body {
   color: var(--fg);
   cursor: pointer;
 }
+.providers {
+  display: flex;
+  gap: 12px;
+  margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+}
+.providers[hidden] {
+  display: none;
+}
+.providers label {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}

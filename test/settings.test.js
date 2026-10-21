@@ -84,4 +84,19 @@ describe('Settings page', () => {
 
     expect(await screen.findByText('Access to KLIPY allowed')).toBeTruthy();
   });
+
+  it('lets the user choose the active Provider when both keys are saved', async () => {
+    const { stored } = await openSettings({ storage: { giphyKey: 'g', klipyKey: 'k' } });
+
+    await userEvent.click(screen.getByRole('radio', { name: 'KLIPY' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(stored.activeProvider).toBe('klipy');
+  });
+
+  it('offers no Provider choice with only one key saved', async () => {
+    await openSettings({ storage: { giphyKey: 'g' } });
+
+    expect(screen.queryByRole('radio')).toBeNull();
+  });
 });

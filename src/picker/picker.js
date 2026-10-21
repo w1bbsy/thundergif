@@ -1,6 +1,6 @@
 import { PROVIDERS, PROVIDER_IDS } from '../providers/providers.js';
 import { insertIntoCompose, isPlainText } from '../compose/insert.js';
-import { getProviderKey, getRating } from '../settings/store.js';
+import { getProviderKey, getRating, getActiveProvider, setActiveProvider } from '../settings/store.js';
 
 /**
  * @typedef {object} PickerEnv
@@ -26,19 +26,18 @@ export async function startPicker(env) {
     const key = await getProviderKey(browser, id);
     if (key) keys[id] = key;
   }
-  const activeId = PROVIDER_IDS.find((id) => keys[id]);
-  if (!activeId) {
+  const withKeys = PROVIDER_IDS.filter((id) => keys[id]);
+  const firstId = await getActiveProvider(browser, withKeys);
+  if (!firstId) {
     const openSettingsForKey = actionButton(document, 'Open settings', () => browser.runtime.openOptionsPage());
     showMessage(document, 'Add a GIPHY or KLIPY Provider key in settings to start finding GIFs.', openSettingsForKey);
     return;
   }
-  const info = PROVIDERS[activeId];
-  const provider = info.create({ key: /** @type {string} */ (keys[activeId]), rating, fetch: env.fetch });
-  searchBox.setAttribute('aria-label', `Search ${info.name}`);
-  searchBox.placeholder = `Search ${info.name}`;
+  /** @type {import('../providers/providers.js').ProviderInfo} */
+  let info = PROVIDERS[firstId];
+  /** @type {ReturnType<typeof info.create>} */
+  let provider = info.create({ key: /** @type {string} */ (keys[firstId]), rating, fetch: env.fetch });
   const attribution = /** @type {HTMLElement} */ (document.querySelector('.attribution'));
-  attribution.textContent = info.attribution;
-  attribution.hidden = info.attribution === '';
 
   const grid = /** @type {HTMLUListElement} */ (document.querySelector('.grid'));
   const more = /** @type {HTMLButtonElement} */ (document.querySelector('button.more'));
@@ -122,15 +121,57 @@ export async function startPicker(env) {
     else typingTimer = setTimeout(() => search(term), env.typingPauseMs ?? 500);
   });
 
-  if (await browser.permissions.contains({ origins: info.origins })) {
+  /**
+   * Makes a Provider the one the Picker searches, starting again from its trending GIFs.
+   * @param {import('../providers/providers.js').ProviderId} id
+   */
+  const activate = async (id) => {
+    info = PROVIDERS[id];
+    provider = info.create({ key: /** @type {string} */ (keys[id]), rating, fetch: env.fetch });
+    searchBox.setAttribute('aria-label', `Search ${info.name}`);
+    searchBox.placeholder = `Search ${info.name}`;
+    searchBox.value = '';
+    clearTimeout(typingTimer);
+    shownTerm = '';
+    attribution.textContent = info.attribution;
+    attribution.hidden = info.attribution === '';
+    // Drop the other Provider's results so the two are never mixed.
+    generation++;
+    grid.replaceChildren();
+    setNext(null);
+    if (!(await browser.permissions.contains({ origins: info.origins }))) {
+      searchBox.disabled = true;
+      // Permission prompts are unreliable from a popup, so the settings page (a full tab) asks.
+      const openSettings = actionButton(document, 'Open settings', () => browser.runtime.openOptionsPage());
+      showMessage(document, `Thundergif needs your permission to reach ${info.name}. Allow it in settings.`, openSettings);
+      return;
+    }
     searchBox.disabled = false;
     searchBox.focus();
     await show(provider.trending);
-    return;
+  };
+
+  if (withKeys.length > 1) {
+    const choice = /** @type {HTMLFieldSetElement} */ (document.querySelector('.providers'));
+    choice.replaceChildren(
+      ...withKeys.map((id) => {
+        const label = document.createElement('label');
+        const radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = 'provider';
+        radio.value = id;
+        radio.checked = id === firstId;
+        radio.addEventListener('change', () => {
+          setActiveProvider(browser, id);
+          activate(id);
+        });
+        label.append(radio, PROVIDERS[id].name);
+        return label;
+      }),
+    );
+    choice.hidden = false;
   }
-  // Permission prompts are unreliable from a popup, so the settings page (a full tab) asks.
-  const openSettings = actionButton(document, 'Open settings', () => browser.runtime.openOptionsPage());
-  showMessage(document, `Thundergif needs your permission to reach ${info.name}. Allow it in settings.`, openSettings);
+  await activate(firstId);
 }
 
 /**

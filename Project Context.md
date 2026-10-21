@@ -9,8 +9,8 @@ Design agreed through a grilling session on 20/10/2026. Spec written to [docs/sp
 ## Current plan (remaining v1 work, started 22/10/2026)
 
 1. #4 KLIPY Provider - done (committed), manual check pending
-2. #5 Switching Provider - in progress
-3. #6 Key check and error messages - not started
+2. #5 Switching Provider - done (committed), manual check pending
+3. #6 Key check and error messages - in progress
 4. #7 Favourites - not started
 5. #9 Keyboard use - not started
 6. #10 v1 release (README incl. why the install warning appears, licence, release notes, build) - not started; publishing the GitHub Release is the maintainer's step

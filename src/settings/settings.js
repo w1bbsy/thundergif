@@ -1,4 +1,12 @@
-import { getProviderKey, setProviderKey, getRating, setRating, RATINGS } from './store.js';
+import {
+  getProviderKey,
+  setProviderKey,
+  getRating,
+  setRating,
+  RATINGS,
+  getActiveProvider,
+  setActiveProvider,
+} from './store.js';
 import { PROVIDERS, PROVIDER_IDS } from '../providers/providers.js';
 
 /**
@@ -15,6 +23,24 @@ export async function startSettings({ document, browser }) {
   const keyField = (/** @type {string} */ id) => /** @type {HTMLInputElement} */ (document.getElementById(`${id}-key`));
 
   for (const id of PROVIDER_IDS) keyField(id).value = await getProviderKey(browser, id);
+  // Choosing a Provider only makes sense once both have keys.
+  const choice = /** @type {HTMLFieldSetElement} */ (document.querySelector('.active-provider'));
+  const filled = () => PROVIDER_IDS.filter((id) => keyField(id).value.trim() !== '');
+  const active = await getActiveProvider(browser, filled());
+  for (const id of PROVIDER_IDS) {
+    const label = document.createElement('label');
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.name = 'activeProvider';
+    radio.value = id;
+    radio.checked = id === active;
+    label.append(radio, PROVIDERS[id].name);
+    choice.append(label);
+  }
+  const showChoice = () => (choice.hidden = filled().length < 2);
+  showChoice();
+  form.addEventListener('input', showChoice);
+
   ratingField.replaceChildren(...RATINGS.map(({ value, label }) => new Option(label, value)));
   ratingField.value = await getRating(browser);
 
@@ -22,6 +48,10 @@ export async function startSettings({ document, browser }) {
     event.preventDefault();
     for (const id of PROVIDER_IDS) await setProviderKey(browser, id, keyField(id).value.trim());
     await setRating(browser, /** @type {import('./store.js').Rating} */ (ratingField.value));
+    const chosen = /** @type {HTMLInputElement | null} */ (choice.querySelector('input:checked'));
+    if (!choice.hidden && chosen) {
+      await setActiveProvider(browser, /** @type {import('../providers/providers.js').ProviderId} */ (chosen.value));
+    }
     status.textContent = 'Saved';
   });
 

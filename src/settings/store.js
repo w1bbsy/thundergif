@@ -51,3 +51,23 @@ export async function getRating(browser) {
 export async function setRating(browser, rating) {
   await browser.storage.local.set({ rating });
 }
+
+/**
+ * The Provider to search: the one last chosen if it still has a key, otherwise the first that does.
+ *
+ * @param {any} browser
+ * @param {import('../providers/providers.js').ProviderId[]} withKeys Providers that have a key, in order
+ * @returns {Promise<import('../providers/providers.js').ProviderId | undefined>}
+ */
+export async function getActiveProvider(browser, withKeys) {
+  const { activeProvider } = await browser.storage.local.get('activeProvider');
+  return withKeys.includes(activeProvider) ? activeProvider : withKeys[0];
+}
+
+/**
+ * @param {any} browser
+ * @param {import('../providers/providers.js').ProviderId} provider
+ */
+export async function setActiveProvider(browser, provider) {
+  await browser.storage.local.set({ activeProvider: provider });
+}
