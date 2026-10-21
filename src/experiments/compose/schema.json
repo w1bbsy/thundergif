@@ -1,0 +1,14 @@
+[
+  {
+    "namespace": "thundergifCompose",
+    "functions": [
+      {
+        "name": "allowRemoteImages",
+        "type": "function",
+        "async": true,
+        "description": "Lets the compose window load remote images, as Thunderbird's own Insert > Image does, so a linked GIF shows in the draft.",
+        "parameters": [{ "name": "tabId", "type": "integer", "minimum": 0 }]
+      }
+    ]
+  }
+]

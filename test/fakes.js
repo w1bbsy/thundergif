@@ -30,6 +30,11 @@ export function fakeThunderbird({ storage = {}, granted = true, editorAccepts = 
   range.selectNodeContents(composeDoc.querySelector('p'));
   range.collapse(false);
   compose.window.getSelection().addRange(range);
+  // Thunderbird only loads remote images in a draft while the compose window allows remote
+  // content (its own Insert > Image and paste turn this on). Images inserted otherwise are blocked.
+  const draft = { allowRemoteContent: false, blocked: new WeakSet() };
+  const isShownInDraft = (img) => !draft.blocked.has(img);
+
   // The simulated browser has no editing commands, so stand in for the compose editor's insertImage.
   composeDoc.execCommand = (command, _showUi, value) => {
     if (command !== 'insertImage' || !editorAccepts) return false;
@@ -37,6 +42,7 @@ export function fakeThunderbird({ storage = {}, granted = true, editorAccepts = 
     const at = selection.getRangeAt(0);
     const img = composeDoc.createElement('img');
     img.setAttribute('src', value);
+    if (!draft.allowRemoteContent) draft.blocked.add(img);
     at.insertNode(img);
     at.setStartAfter(img);
     at.collapse(true);
@@ -75,9 +81,15 @@ export function fakeThunderbird({ storage = {}, granted = true, editorAccepts = 
     runtime: {
       openOptionsPage: async () => {},
     },
+    // Thundergif's own Experiment API.
+    thundergifCompose: {
+      async allowRemoteImages(tabId) {
+        if (tabId === 7) draft.allowRemoteContent = true;
+      },
+    },
   };
 
-  return { browser, stored, composeDoc };
+  return { browser, stored, composeDoc, isShownInDraft };
 }
 
 /** A fetch stand-in that answers from fixture files and records every request. */

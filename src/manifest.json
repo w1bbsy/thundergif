@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Thundergif",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Search GIPHY or KLIPY and insert a GIF into the email you are writing.",
   "browser_specific_settings": {
     "gecko": {
@@ -36,5 +36,21 @@
     "https://media3.giphy.com/*",
     "https://media4.giphy.com/*",
     "https://i.giphy.com/*"
-  ]
+  ],
+  "experiment_apis": {
+    "thundergifCompose": {
+      "schema": "experiments/compose/schema.json",
+      "parent": {
+        "scopes": [
+          "addon_parent"
+        ],
+        "paths": [
+          [
+            "thundergifCompose"
+          ]
+        ],
+        "script": "experiments/compose/implementation.js"
+      }
+    }
+  }
 }

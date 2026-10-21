@@ -1,5 +1,5 @@
 import { giphy, GIPHY_ORIGINS } from '../providers/giphy.js';
-import { insertGif } from '../compose/insert-gif.js';
+import { insertIntoCompose } from '../compose/insert.js';
 import { getGiphyKey } from '../settings/store.js';
 
 /**
@@ -15,8 +15,8 @@ export async function startPicker(env) {
   const { document, browser } = env;
   const giphyKey = await getGiphyKey(browser);
   if (!giphyKey) {
-    const openSettings = actionButton(document, 'Open settings', () => browser.runtime.openOptionsPage());
-    showMessage(document, 'Add a GIPHY Provider key in settings to start finding GIFs.', openSettings);
+    const openSettingsForKey = actionButton(document, 'Open settings', () => browser.runtime.openOptionsPage());
+    showMessage(document, 'Add a GIPHY Provider key in settings to start finding GIFs.', openSettingsForKey);
     return;
   }
   const provider = giphy({ key: giphyKey, fetch: env.fetch });
@@ -32,11 +32,9 @@ export async function startPicker(env) {
     await showTrending();
     return;
   }
-  // Must run straight from the click: Thunderbird only shows the permission prompt for a user action.
-  const allow = actionButton(document, 'Allow access to GIPHY', async () => {
-    if (await browser.permissions.request({ origins: GIPHY_ORIGINS })) await showTrending();
-  });
-  showMessage(document, 'Thundergif needs permission to reach GIPHY before it can show GIFs.', allow);
+  // Permission prompts are unreliable from a popup, so the settings page (a full tab) asks.
+  const openSettings = actionButton(document, 'Open settings', () => browser.runtime.openOptionsPage());
+  showMessage(document, 'Thundergif needs your permission to reach GIPHY. Allow it in settings.', openSettings);
 }
 
 /**
@@ -45,16 +43,9 @@ export async function startPicker(env) {
  */
 async function insert(env, gif) {
   const [tab] = await env.browser.tabs.query({ active: true, currentWindow: true });
-  if (tab?.type === 'messageCompose') {
-    const [injection] = await env.browser.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: insertGif,
-      args: [{ url: gif.insert.url, width: gif.insert.width, height: gif.insert.height, alt: gif.description }],
-    });
-    if (injection?.result === true) {
-      env.close();
-      return;
-    }
+  if (tab?.type === 'messageCompose' && (await insertIntoCompose(env.browser, tab.id, gif))) {
+    env.close();
+    return;
   }
   showMessage(env.document, 'Thundergif could not insert the GIF. Click in the body of your email and try again.');
 }

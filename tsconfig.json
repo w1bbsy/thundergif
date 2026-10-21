@@ -7,8 +7,18 @@
     "checkJs": true,
     "noEmit": true,
     "strict": true,
-    "lib": ["es2022", "dom", "dom.iterable"],
+    "lib": [
+      "es2022",
+      "dom",
+      "dom.iterable"
+    ],
     "skipLibCheck": true
   },
-  "include": ["src/**/*.js", "src/**/*.d.ts"]
+  "include": [
+    "src/**/*.js",
+    "src/**/*.d.ts"
+  ],
+  "exclude": [
+    "src/experiments/**"
+  ]
 }

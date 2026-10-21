@@ -4,7 +4,7 @@ Personal project, not connected to Averion Strategy. Vocabulary lives in [GLOSSA
 
 ## Status
 
-Design agreed through a grilling session on 20/10/2026. Spec written to [docs/spec.md](docs/spec.md) on 20/10/2026, kept in the repo as the reference design. Broken into ten tickets on 20/10/2026, now GitHub issues #1 to #10 with native blocking links and the ready-for-agent label (#1 is the starting point; #2, #3, and #8 can run in parallel after it). Agent skills configured 20/10/2026: GitHub Issues, default triage labels, single-context domain docs (see CLAUDE.md). Public GitHub repo created 20/10/2026: https://github.com/w1bbsy/thundergif . Issue #1 (walking skeleton) implemented 21/10/2026, awaiting the manual check in Thunderbird 158.
+Design agreed through a grilling session on 20/10/2026. Spec written to [docs/spec.md](docs/spec.md) on 20/10/2026, kept in the repo as the reference design. Broken into ten tickets on 20/10/2026, now GitHub issues #1 to #10 with native blocking links and the ready-for-agent label (#1 is the starting point; #2, #3, and #8 can run in parallel after it). Agent skills configured 20/10/2026: GitHub Issues, default triage labels, single-context domain docs (see CLAUDE.md). Public GitHub repo created 20/10/2026: https://github.com/w1bbsy/thundergif . Issue #1 (walking skeleton) implemented 21/10/2026. Manual check 21/10/2026: install, key, trending, attribution, insert at cursor, undo, and sent-as-link all passed; GIFs showed broken in the draft. Fixed 22/10/2026 with an Experiment (see docs/adr/0001), verified by the real-Thunderbird check; awaiting a final manual check of 0.1.2.
 
 ## Decisions
 
@@ -32,12 +32,14 @@ Design agreed through a grilling session on 20/10/2026. Spec written to [docs/sp
 
 ## Build notes (issue #1)
 
-- Host permissions cover GIPHY's API and media servers (media, media0 to media4, i.giphy.com). API-only (0.1.0) showed a broken image in the draft: a GIF the add-on places in the compose editor is loaded on the add-on's behalf, so its server must be declared. Recipients were unaffected. KLIPY (#4) will need its media hosts for the same reason.
+- Host permissions cover GIPHY's API and media servers (media, media0 to media4, i.giphy.com). Adding media hosts (0.1.1) was a wrong guess at the draft bug, but they are kept: the add-on's own pages load GIPHY media.
+- Real cause of the broken draft image: Thunderbird's compose window blocks remote images unless its allowRemoteContent flag is on, which only its own UI actions set. Fixed with the `thundergifCompose` Experiment (docs/adr/0001-experiment-to-show-linked-gifs-in-drafts.md).
+- `checks/thunderbird/check.py` runs a throwaway headless Thunderbird (empty profile) and checks an inserted GIF really loads in the draft. Needs Thunderbird and `pip install -r checks/thunderbird/requirements.txt`. Run before releases and after Thunderbird updates.
+- Permission prompts from the Picker popup did not work (button never cleared). The Picker now sends the user to settings, where the "Allow access to GIPHY" button asks.
 - The compose editor never animates GIFs, including manually inserted ones; recipients see them animate.
 - GIFs go in through the editor's `insertImage` command, which takes only the URL (no HTML is parsed) and keeps undo. Alt text, size, and `moz-do-not-send` are set on the inserted image afterwards. If the editor refuses, the Picker says so and stays open; there is no silent fallback.
 - `compose` permission kept alongside `scripting` for injecting into compose tabs; confirm in the manual check.
 - The Picker already shows a minimal "no Provider key" message with an Open settings button; issue #6 should refine it rather than add a second one.
-- The Picker can ask for a revoked GIPHY permission. The popup may close while the prompt shows; reopening it should then work. Check manually.
 - Firefox's linter asks for `data_collection_permissions`; handle in issue #10.
 
 ## Required by Provider terms

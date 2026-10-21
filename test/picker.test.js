@@ -63,16 +63,26 @@ describe('Picker with a GIPHY Provider key', () => {
     expect(img.getAttribute('width')).toBe(firstGif.images.downsized.width);
   });
 
-  it('asks for access to GIPHY before searching when the host permission has been revoked', async () => {
-    const { requests } = await openPicker({ granted: false });
-
-    const allow = await screen.findByRole('button', { name: 'Allow access to GIPHY' });
-    expect(requests).toHaveLength(0);
-
-    await userEvent.click(allow);
-
+  it('inserts the GIF so Thunderbird shows it in the draft rather than blocking it', async () => {
+    const { composeDoc, isShownInDraft } = await openPicker();
     const results = await screen.findByRole('list', { name: 'GIFs' });
-    await waitFor(() => expect(within(results).getAllByRole('button')).toHaveLength(24));
+
+    await userEvent.click(within(results).getAllByRole('button')[0]);
+
+    await waitFor(() => expect(composeDoc.querySelector('img')).not.toBeNull());
+    expect(isShownInDraft(composeDoc.querySelector('img'))).toBe(true);
+  });
+
+  it('sends the user to settings instead of searching when access to GIPHY is not allowed', async () => {
+    const { requests, browser } = await openPicker({ granted: false });
+    let opened = false;
+    browser.runtime.openOptionsPage = async () => (opened = true);
+
+    expect(await screen.findByText(/needs your permission to reach GIPHY/i)).toBeTruthy();
+    await userEvent.click(screen.getByRole('button', { name: 'Open settings' }));
+
+    expect(requests).toHaveLength(0);
+    expect(opened).toBe(true);
   });
 });
 
