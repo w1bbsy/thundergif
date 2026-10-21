@@ -1,6 +1,7 @@
 // GIPHY Provider: the only place that knows GIPHY's URLs, parameters, and response layout.
 
 import { PAGE_SIZE } from './gif.js';
+import { fetchFromProvider } from './errors.js';
 
 const API = 'https://api.giphy.com/v1/gifs';
 
@@ -39,9 +40,8 @@ export function giphy({ key, rating, fetch }) {
       rating,
       ...params,
     }).toString();
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`GIPHY responded ${response.status}`);
-    const body = await response.json();
+    // GIPHY answers a bad key with 401 (or 403 for a banned one).
+    const body = await fetchFromProvider(fetch, url, (r) => r.status === 401 || r.status === 403);
     const { offset: start, count, total_count: total } = body.pagination;
     return { gifs: body.data.map(toGif), next: count > 0 && start + count < total ? start + count : null };
   }

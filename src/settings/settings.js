@@ -8,21 +8,28 @@ import {
   setActiveProvider,
 } from './store.js';
 import { PROVIDERS, PROVIDER_IDS } from '../providers/providers.js';
+import { ProviderError } from '../providers/errors.js';
 
 /**
  * @typedef {object} SettingsEnv
  * @property {Document} document
  * @property {any} browser Thunderbird's add-on API
+ * @property {typeof globalThis.fetch} fetch
  */
 
 /** @param {SettingsEnv} env */
-export async function startSettings({ document, browser }) {
+export async function startSettings({ document, browser, fetch }) {
   const form = /** @type {HTMLFormElement} */ (document.querySelector('form.settings'));
   const status = /** @type {HTMLElement} */ (document.querySelector('.status'));
   const ratingField = /** @type {HTMLSelectElement} */ (document.getElementById('rating'));
   const keyField = (/** @type {string} */ id) => /** @type {HTMLInputElement} */ (document.getElementById(`${id}-key`));
 
-  for (const id of PROVIDER_IDS) keyField(id).value = await getProviderKey(browser, id);
+  /** @type {Record<string, string>} */
+  const savedKeys = {};
+  for (const id of PROVIDER_IDS) {
+    savedKeys[id] = await getProviderKey(browser, id);
+    keyField(id).value = savedKeys[id];
+  }
   // Choosing a Provider only makes sense once both have keys.
   const choice = /** @type {HTMLFieldSetElement} */ (document.querySelector('.active-provider'));
   const filled = () => PROVIDER_IDS.filter((id) => keyField(id).value.trim() !== '');
@@ -46,13 +53,22 @@ export async function startSettings({ document, browser }) {
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    const rating = /** @type {import('./store.js').Rating} */ (ratingField.value);
     for (const id of PROVIDER_IDS) await setProviderKey(browser, id, keyField(id).value.trim());
-    await setRating(browser, /** @type {import('./store.js').Rating} */ (ratingField.value));
+    await setRating(browser, rating);
     const chosen = /** @type {HTMLInputElement | null} */ (choice.querySelector('input:checked'));
     if (!choice.hidden && chosen) {
       await setActiveProvider(browser, /** @type {import('../providers/providers.js').ProviderId} */ (chosen.value));
     }
     status.textContent = 'Saved';
+    // Check only keys that changed, with one request each, so the hourly limit is spared.
+    for (const id of PROVIDER_IDS) {
+      const key = keyField(id).value.trim();
+      const keyStatus = /** @type {HTMLElement} */ (document.getElementById(`${id}-key-status`));
+      if (key === savedKeys[id]) continue;
+      savedKeys[id] = key;
+      keyStatus.textContent = key === '' ? '' : await checkKey(PROVIDERS[id], key, rating, fetch);
+    }
   });
 
   const access = /** @type {HTMLElement} */ (document.querySelector('.access'));
@@ -85,4 +101,24 @@ async function showAccess(document, browser, row, provider) {
     await showAccess(document, browser, row, provider);
   });
   row.replaceChildren(`Thundergif needs your permission to reach ${provider.name}. `, allow);
+}
+
+/**
+ * Runs one test request with a Provider key and describes the outcome.
+ *
+ * @param {import('../providers/providers.js').ProviderInfo} provider
+ * @param {string} key
+ * @param {import('./store.js').Rating} rating
+ * @param {typeof globalThis.fetch} fetch
+ */
+async function checkKey(provider, key, rating, fetch) {
+  try {
+    await provider.create({ key, rating, fetch }).trending();
+    return `${provider.name}: Saved, working`;
+  } catch (error) {
+    const kind = error instanceof ProviderError ? error.kind : 'unreachable';
+    if (kind === 'rejected') return `${provider.name}: Key rejected`;
+    if (kind === 'limit') return `${provider.name}: Saved, but the hourly limit is used up, so the key could not be checked yet`;
+    return `${provider.name}: Saved, but ${provider.name} could not be reached to check the key`;
+  }
 }

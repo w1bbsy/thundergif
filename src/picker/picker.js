@@ -1,5 +1,6 @@
 import { PROVIDERS, PROVIDER_IDS } from '../providers/providers.js';
 import { insertIntoCompose, isPlainText } from '../compose/insert.js';
+import { ProviderError } from '../providers/errors.js';
 import { getProviderKey, getRating, getActiveProvider, setActiveProvider } from '../settings/store.js';
 
 /**
@@ -15,6 +16,7 @@ import { getProviderKey, getRating, getActiveProvider, setActiveProvider } from 
 export async function startPicker(env) {
   const { document, browser } = env;
   const searchBox = /** @type {HTMLInputElement} */ (document.querySelector('form.search input'));
+  document.querySelector('button.settings')?.addEventListener('click', () => browser.runtime.openOptionsPage());
   const composeTab = await findComposeTab(browser);
   if (composeTab && (await isPlainText(browser, composeTab.id))) {
     /** @type {HTMLElement} */ (document.querySelector('.note')).hidden = false;
@@ -43,7 +45,18 @@ export async function startPicker(env) {
   const more = /** @type {HTMLButtonElement} */ (document.querySelector('button.more'));
   const tiles = (/** @type {import('../providers/gif.js').Gif[]} */ gifs) =>
     gifs.map((gif) => tile(document, gif, () => insert(env, gif)));
-  const unreachable = () => showMessage(document, `Thundergif could not reach ${info.name}. Try again in a moment.`);
+  /** @param {unknown} error */
+  const failed = (error) => {
+    const kind = error instanceof ProviderError ? error.kind : 'unreachable';
+    if (kind === 'rejected') {
+      const openSettings = actionButton(document, 'Open settings', () => browser.runtime.openOptionsPage());
+      showMessage(document, `${info.name} no longer accepts your Provider key. Check it in settings.`, openSettings);
+    } else if (kind === 'limit') {
+      showMessage(document, `You have used this hour's ${info.name} requests. Try again later.`);
+    } else {
+      showMessage(document, `Thundergif could not reach ${info.name}. Try again in a moment.`);
+    }
+  };
 
   /** @typedef {(next?: number) => Promise<import('../providers/gif.js').Page>} PageSource */
   /** @type {{ source: PageSource, next: number | null }} */
@@ -72,8 +85,8 @@ export async function startPicker(env) {
       listing = { source, next: null };
       setNext(page.next);
       if (page.gifs.length === 0) showMessage(document, emptyText);
-    } catch {
-      if (mine === generation) unreachable();
+    } catch (error) {
+      if (mine === generation) failed(error);
     }
   };
 
@@ -86,8 +99,8 @@ export async function startPicker(env) {
       if (mine !== generation) return;
       grid.append(...tiles(page.gifs));
       setNext(page.next);
-    } catch {
-      if (mine === generation) unreachable();
+    } catch (error) {
+      if (mine === generation) failed(error);
     } finally {
       loadingMore = false;
     }

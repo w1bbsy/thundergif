@@ -62,9 +62,22 @@ body {
   height: 100%;
   object-fit: cover;
 }
-.attribution {
+footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-top: 8px;
-  text-align: right;
+}
+footer .settings {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--focus);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.attribution {
   font-size: 11px;
   color: var(--muted);
 }

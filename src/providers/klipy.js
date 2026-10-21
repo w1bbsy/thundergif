@@ -1,5 +1,6 @@
 // KLIPY Provider: the only place that knows KLIPY's URLs, parameters, and response layout.
 import { PAGE_SIZE } from './gif.js';
+import { fetchFromProvider } from './errors.js';
 
 const API = 'https://api.klipy.com/api/v1';
 
@@ -36,9 +37,8 @@ export function klipy({ key, rating, fetch }) {
       content_filter: CONTENT_FILTER[rating],
       ...params,
     }).toString();
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`KLIPY responded ${response.status}`);
-    const body = await response.json();
+    // KLIPY puts the key in the path and answers a bad one with 404 (or 401/403).
+    const body = await fetchFromProvider(fetch, url, (r) => [401, 403, 404].includes(r.status));
     // KLIPY requires its results in the order given, unfiltered.
     return { gifs: body.data.data.map(toGif), next: body.data.has_next ? page + 1 : null };
   }
