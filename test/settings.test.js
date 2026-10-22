@@ -177,3 +177,12 @@ describe('Checking a key before access is allowed', () => {
     expect(await screen.findByText('GIPHY: Saved, working')).toBeTruthy();
   });
 });
+
+describe('Privacy note on the settings page', () => {
+  it('lists what Thundergif sends and where', async () => {
+    await openSettings();
+
+    const note = screen.getByRole('region', { name: 'What Thundergif sends' });
+    expect(note.textContent).toMatch(/search terms and Provider key go only to the Provider you are searching/);
+  });
+});

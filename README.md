@@ -44,7 +44,7 @@ When you install, Thunderbird warns that the add-on will have "full, unrestricte
 
 Thunderbird blocks remote images in an email you are writing unless you added them yourself with Insert > Image, paste or drag and drop. There is no ordinary add-on permission that lets an add-on's GIF through, so without help every GIF would show as a broken image while you write (your recipients would still see it).
 
-Thundergif includes one small privileged module (a Thunderbird "Experiment") that does exactly what Insert > Image does: it tells the compose window it may show remote images. That is all it does. Thunderbird shows the same warning for any add-on that contains an Experiment, however small, and there is no way to narrow it. You can read the whole module in [`src/experiments/compose/implementation.js`](src/experiments/compose/implementation.js); it is about 25 lines. The reasoning is recorded in [docs/adr/0001](docs/adr/0001-experiment-to-show-linked-gifs-in-drafts.md).
+Thundergif includes one small privileged module (a Thunderbird "Experiment") that does exactly what Insert > Image does: it tells the compose window it may show remote images. That is all it does. Thunderbird shows the same warning for any add-on that contains an Experiment, however small, and there is no way to narrow it. You can read the whole module in [`src/experiments/compose/implementation.js`](src/experiments/compose/implementation.js); it is about 29 lines. The reasoning is recorded in [docs/adr/0001](docs/adr/0001-experiment-to-show-linked-gifs-in-drafts.md).
 
 If Thunderbird adds a proper way for add-ons to insert images, the Experiment and the warning can go.
 

@@ -66,6 +66,13 @@ Install warning decision (22/10/2026): keep the Experiment and explain the "full
 - Plain-text emails get the GIF's medium media URL typed at the cursor (undoable insertText).
 - `checks/thunderbird/check.py` now also checks the plain-text path in a real Thunderbird.
 
+## addons.thunderbird.net (22/10/2026)
+
+- Maintainer is submitting manually. 1.0.0 passed ATN's automatic validation (2 expected warnings: Thunderbird-only `compose` permission and API).
+- 1.0.1 prepared for the human review: `sensitiveDataUpload` permission (ATN rule for hardcoded third-party servers), Experiment clears the startup cache on non-shutdown unload, settings page lists what is sent. Listing text, privacy policy and reviewer notes in docs/atn-listing.md.
+- The cache clean-up has not been exercised by a test (it only runs on disable, removal or update).
+- Expect admin review because of the Experiment.
+
 ## Release notes (1.0.0, 22/10/2026)
 
 - Licence copyright holder is the GitHub handle w1bbsy (not a personal name), as the repo is public.

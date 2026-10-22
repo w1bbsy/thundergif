@@ -27,3 +27,13 @@ body {
 .active-provider[hidden] {
   display: none;
 }
+.privacy {
+  max-width: 420px;
+  margin-top: 16px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+.privacy h2 {
+  font-size: 13px;
+  margin: 0 0 4px;
+}
