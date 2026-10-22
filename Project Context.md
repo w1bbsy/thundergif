@@ -15,7 +15,7 @@ Design agreed through a grilling session on 20/10/2026. Spec written to [docs/sp
 5. #9 Keyboard use - done (committed), manual check pending
 6. #10 v1 release - README, licence, manual checklist, release notes and 1.0.0 build done (committed); manual checklist run and publishing the GitHub Release are the maintainer's steps
 7. Thunderbird feature request drafted at docs/upstream/thunderbird-feature-request-insert-remote-images.md - done; the maintainer posts it
-8. Code review of #4 to #9 - done, fixes committed; manual checks by the maintainer after #10
+8. Code review done; manual checklist passed on Thunderbird 158 (22/10/2026); #4, #5, #6, #7, #9 closed
 
 Install warning decision (22/10/2026): keep the Experiment and explain the "full, unrestricted access" warning in the README; Thunderbird shows it for any add-on with an Experiment and it cannot be softened.
 
