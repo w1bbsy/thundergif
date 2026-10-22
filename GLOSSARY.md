@@ -20,6 +20,10 @@ _Avoid_: Popup, search window, browser
 A GIF a user has starred in the Picker so it can be found again, kept per Provider inside the add-on rather than in any Provider account.
 _Avoid_: Saved GIF, bookmark, like
 
+**Account favourite**:
+A GIF saved in someone's own GIPHY or KLIPY account. Thundergif cannot read these; they are separate from Favourites.
+_Avoid_: Profile favourite, saved GIF
+
 **Rating**:
 The content rating ceiling (G, PG, PG-13, or R) that limits which GIFs a search returns.
 _Avoid_: Filter, safe search, age rating

@@ -21,6 +21,20 @@ Design agreed through a grilling session on 20/10/2026. Spec written to [docs/sp
 
 Install warning decision (22/10/2026): keep the Experiment and explain the "full, unrestricted access" warning in the README; Thunderbird shows it for any add-on with an Experiment and it cannot be softened.
 
+## v1.1 design (grilling, 22/10/2026)
+
+| # | Topic | Decision |
+|---|---|---|
+| 20 | Search term on Provider switch | The term stays in the box and the search reruns on the new Provider (one request). Only within one Picker session; each new Picker opens on trending. |
+| 21 | Tab on Provider switch | Stays on whatever tab was showing (search results or Favourites). |
+| 22 | Account favourites | Dropped: neither GIPHY nor KLIPY offers an API for reading them (checked 22/10/2026). README says so. Thundergif's own Favourites stay. |
+| 23 | Beer link placement | A small, passive "Buy me a beer" link at the bottom of the settings page, plus the README and GitHub repo page. Not in the Picker, never on install or as a reminder. |
+| 24 | ATN Contribute button | Not used: ATN only accepts PayPal, Liberapay, Patreon, Open Collective and similar, not Stripe. |
+| 25 | GIPHY attribution | Add the official GIPHY logo (bundled, never loaded remotely) beside "Powered by GIPHY", and show each GIF's creator where GIPHY provides one. |
+| 26 | Stripe link | A Stripe Payment Link made in the dashboard, "customers choose what to pay" with a £4 preset. Thundergif stores only its buy.stripe.com address; no Stripe keys of any kind, no Stripe code. Address to come from the maintainer. |
+| 27 | Link wording | "Enjoying Thundergif? Buy me a beer", the link opening the Payment Link in the default browser. |
+| 28 | Release of these changes | 1.1.0 on GitHub straight away; uploaded to ATN only after 1.0.2 is approved, so the review queue is not reset. |
+
 ## Decisions
 
 | # | Topic | Decision |
