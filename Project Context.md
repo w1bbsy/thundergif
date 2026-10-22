@@ -85,6 +85,8 @@ Built 22/10/2026 as 1.1.0: #13 (search kept on switch), #14 (beer link), #15 (GI
 
 ## addons.thunderbird.net (22/10/2026)
 
+- 1.0.2 approved and listed on ATN (https://addons.thunderbird.net/thunderbird/addon/thundergif/). 1.1.0 uploaded with user-facing version notes, awaiting review.
+
 - Maintainer is submitting manually. 1.0.0 passed ATN's automatic validation (2 expected warnings: Thunderbird-only `compose` permission and API).
 - 1.0.1 prepared for the human review: `sensitiveDataUpload` permission (ATN rule for hardcoded third-party servers), Experiment clears the startup cache on non-shutdown unload, settings page lists what is sent. Listing text, privacy policy and reviewer notes in docs/atn-listing.md.
 - The cache clean-up has not been exercised by a test (it only runs on disable, removal or update).

@@ -34,6 +34,10 @@ Free keys allow about 100 requests an hour. Each time the Picker opens, each sea
 
 ## Installing
 
+The easiest way: install Thundergif from [addons.thunderbird.net](https://addons.thunderbird.net/thunderbird/addon/thundergif/), or search for Thundergif in Thunderbird's Add-ons and Themes. Updates then arrive automatically.
+
+Or install a file by hand:
+
 1. Download `thundergif-<version>.xpi` from this repository's [Releases](https://github.com/w1bbsy/thundergif/releases) page.
 2. In Thunderbird, open Tools > Add-ons and Themes, click the gear icon, and choose Install Add-on From File.
 3. Pick the downloaded file and confirm.
