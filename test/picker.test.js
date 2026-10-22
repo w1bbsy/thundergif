@@ -46,6 +46,13 @@ describe('Picker with a GIPHY Provider key', () => {
     expect(tiles[2].title).toMatch(/\nBy stinkyzaba$/);
   });
 
+  it('never asks for donations in the Picker', async () => {
+    await openPicker();
+    await gridTiles();
+
+    expect(document.body.textContent).not.toMatch(/beer|donat/i);
+  });
+
   it('asks GIPHY for 24 trending GIFs at PG with the stored Provider key', async () => {
     const { requests } = await openPicker();
 

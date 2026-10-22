@@ -8,9 +8,9 @@ It runs on Thunderbird 140 up to the newest version it has been tested on (curre
 
 - Search GIPHY or KLIPY from the compose window. Results appear as you type (after a short pause), 24 at a time, with a More button for the next 24.
 - Click a GIF, or press Enter on it, to insert it at the cursor. Cmd+Z takes it out again.
-- Star GIFs to keep them in a Favourites tab. Each Provider has its own list.
+- Star GIFs to keep them in a Favourites tab. Each Provider has its own list. These are Thundergif's own Favourites: GIFs you have saved in your GIPHY or KLIPY account cannot be brought in, because neither offers apps a way to read them.
 - Choose a Rating (G, PG, PG-13 or R; PG by default) to limit what results can include.
-- Use both Providers: save a key for each and switch between them in the Picker.
+- Use both Providers: save a key for each and switch between them in the Picker. Your search carries over when you switch.
 - Writing in plain text? The Picker pastes the GIF's link instead, since plain-text emails cannot hold images.
 - Keyboard: the down arrow moves from the search box into the results, the arrow keys move between GIFs, Enter inserts and Escape closes.
 
@@ -94,6 +94,10 @@ npm test
 - [docs/manual-checklist.md](docs/manual-checklist.md) lists the checks to do by hand in Thunderbird before a release.
 
 Design notes live in [docs/spec.md](docs/spec.md), [docs/adr/](docs/adr/) and [GLOSSARY.md](GLOSSARY.md).
+
+## Support
+
+Thundergif is free and always will be. If it brightens your emails, you can [buy me a beer](https://donate.stripe.com/dRm14m0RbfEqaMg3S0a3u00). The same link sits at the bottom of the add-on's settings page; it never pops up.
 
 ## Licence
 

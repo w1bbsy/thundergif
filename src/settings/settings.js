@@ -81,6 +81,14 @@ export async function startSettings({ document, browser, fetch }) {
     }
   });
 
+  // Links leave Thunderbird for the user's own browser rather than opening inside it.
+  for (const link of document.querySelectorAll('a[href^="https://"]')) {
+    link.addEventListener('click', (event) => {
+      event.preventDefault();
+      browser.windows.openDefaultBrowser(/** @type {HTMLAnchorElement} */ (link).href);
+    });
+  }
+
   const access = /** @type {HTMLElement} */ (document.querySelector('.access'));
   for (const id of PROVIDER_IDS) {
     const row = document.createElement('p');

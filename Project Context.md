@@ -23,6 +23,9 @@ Install warning decision (22/10/2026): keep the Experiment and explain the "full
 
 ## v1.1 design (grilling, 22/10/2026)
 
+Built 22/10/2026 as 1.1.0: #13 (search kept on switch), #14 (beer link), #15 (GIPHY logo and creator credit). Awaiting the maintainer's manual check; ATN upload waits for 1.0.2's approval.
+
+
 | # | Topic | Decision |
 |---|---|---|
 | 20 | Search term on Provider switch | The term stays in the box and the search reruns on the new Provider (one request). Only within one Picker session; each new Picker opens on trending. |
@@ -31,7 +34,7 @@ Install warning decision (22/10/2026): keep the Experiment and explain the "full
 | 23 | Beer link placement | A small, passive "Buy me a beer" link at the bottom of the settings page, plus the README and GitHub repo page. Not in the Picker, never on install or as a reminder. |
 | 24 | ATN Contribute button | Not used: ATN only accepts PayPal, Liberapay, Patreon, Open Collective and similar, not Stripe. |
 | 25 | GIPHY attribution | Add the official GIPHY logo (bundled, never loaded remotely) beside "Powered by GIPHY", and show each GIF's creator where GIPHY provides one. |
-| 26 | Stripe link | A Stripe Payment Link made in the dashboard, "customers choose what to pay" with a £4 preset. Thundergif stores only its buy.stripe.com address; no Stripe keys of any kind, no Stripe code. Address to come from the maintainer. |
+| 26 | Stripe link | Stripe donation link https://donate.stripe.com/dRm14m0RbfEqaMg3S0a3u00 (customer chooses amount, 4 GBP preset), made by the maintainer in the dashboard. Thundergif stores only the address; no Stripe keys or code. Also in .github/FUNDING.yml for GitHub's Sponsor button. |
 | 27 | Link wording | "Enjoying Thundergif? Buy me a beer", the link opening the Payment Link in the default browser. |
 | 28 | Release of these changes | 1.1.0 on GitHub straight away; uploaded to ATN only after 1.0.2 is approved, so the review queue is not reset. |
 

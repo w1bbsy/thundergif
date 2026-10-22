@@ -186,3 +186,14 @@ describe('Privacy note on the settings page', () => {
     expect(note.textContent).toMatch(/search terms and Provider key go only to the Provider you are searching/);
   });
 });
+
+describe('Buy me a beer', () => {
+  it('opens the Stripe donation page in the default browser', async () => {
+    const { browser } = await openSettings();
+
+    expect(screen.getByText(/Enjoying Thundergif\?/)).toBeTruthy();
+    await userEvent.click(screen.getByRole('link', { name: 'Buy me a beer' }));
+
+    expect(browser.windows.opened).toEqual(['https://donate.stripe.com/dRm14m0RbfEqaMg3S0a3u00']);
+  });
+});

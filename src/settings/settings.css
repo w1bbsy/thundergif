@@ -37,3 +37,9 @@ body {
   font-size: 13px;
   margin: 0 0 4px;
 }
+.beer {
+  max-width: 420px;
+  margin-top: 16px;
+  font-size: 12px;
+  opacity: 0.85;
+}

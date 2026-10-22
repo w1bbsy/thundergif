@@ -96,6 +96,12 @@ export function fakeThunderbird({ storage = {}, granted = true, editorAccepts = 
     runtime: {
       openOptionsPage: async () => {},
     },
+    windows: {
+      opened: [],
+      async openDefaultBrowser(url) {
+        this.opened.push(url);
+      },
+    },
     // Thundergif's own Experiment API.
     thundergifCompose: {
       async allowRemoteImages(tabId) {
