@@ -2,17 +2,27 @@
 
 Text to paste into the ATN submission form for Thundergif. ATN does not allow external links in the description, so there are none below; links are fine in the notes to the reviewer.
 
-## Name
+## Form fields, in the order ATN asks for them
 
-Thundergif
+| Field | Enter |
+|---|---|
+| Name | Thundergif |
+| Add-on URL | Leave as `thundergif` |
+| Summary | See below (124 of the 160 characters allowed) |
+| This add-on is experimental | **Leave unticked.** This marks an add-on as not ready for general use. It is not about the Experiment API inside Thundergif. |
+| This add-on requires payment, non-free services or software, or additional hardware | **Leave unticked.** It needs a free GIPHY or KLIPY key, nothing paid. The description says a key is needed. |
+| Categories (up to 2) | **Message Composition** only. None of the others fits. |
+| Support email | Optional. Leave blank, or use an address you are happy to have shown publicly. |
+| Support web site | https://github.com/w1bbsy/thundergif/issues |
+| Licence | **MIT/X11 License** |
+| This add-on has a Privacy Policy | **Tick it**, then paste the Privacy policy section below into the box. ATN requires the text itself, not a link. |
+| Notes to Reviewer | Paste the Notes to the reviewer section below. Only you and reviewers see it. |
+
+The Description goes in on a later page of the form, along with screenshots.
 
 ## Summary
 
-Search GIPHY or KLIPY from the compose window and drop a GIF into your email. Bring your own free key; GIFs are sent as links, Favourites stay on your computer.
-
-## Category
-
-Message Composition (or the closest match offered).
+Search GIPHY or KLIPY from the compose window and drop a GIF into your email. Uses your own free key; GIFs are sent as links.
 
 ## Description
 
