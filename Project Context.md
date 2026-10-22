@@ -14,7 +14,7 @@ Design agreed through a grilling session on 20/10/2026. Spec written to [docs/sp
 4. #7 Favourites - done (committed), manual check pending
 5. #9 Keyboard use - done (committed), manual check pending
 6. #10 v1 release - README, licence, manual checklist, release notes and 1.0.0 build done (committed); manual checklist run and publishing the GitHub Release are the maintainer's steps
-7. Thunderbird feature request drafted at docs/upstream/thunderbird-feature-request-insert-remote-images.md - done; the maintainer posts it
+7. Thunderbird feature request drafted at docs/upstream/thunderbird-feature-request-insert-remote-images.md - on the maintainer's backlog (GitHub issue) to post
 8. Code review done; manual checklist passed on Thunderbird 158 (22/10/2026); #4, #5, #6, #7, #9 closed
 
 Install warning decision (22/10/2026): keep the Experiment and explain the "full, unrestricted access" warning in the README; Thunderbird shows it for any add-on with an Experiment and it cannot be softened.
@@ -68,7 +68,7 @@ Install warning decision (22/10/2026): keep the Experiment and explain the "full
 
 - Licence copyright holder is the GitHub handle w1bbsy (not a personal name), as the repo is public.
 - Firefox's linter flags a missing `data_collection_permissions` key; not added, as Thunderbird's support for it is unconfirmed. Revisit before submitting to addons.thunderbird.net.
-- Thunderbird 140 ESR has not been tested; the manual checklist covers it.
+- Thunderbird 140 ESR has not been tested and the maintainer cannot test it (22/10/2026); README and release notes say tested on Thunderbird 158 on macOS only.
 
 ## Build notes (issue #4)
 
