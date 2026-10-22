@@ -157,11 +157,11 @@ export async function startPicker(env) {
   /** @param {string} term */
   const search = (term) => {
     clearTimeout(typingTimer);
-    if (term === shownTerm) return;
+    if (term === shownTerm) return Promise.resolve();
     shownTerm = term;
     selectTab(browseTab);
-    if (term === '') show(provider.trending);
-    else show((next) => provider.search(term, next), `No GIFs found for "${term}". Try different words.`);
+    if (term === '') return show(provider.trending);
+    return show((next) => provider.search(term, next), `No GIFs found for "${term}". Try different words.`);
   };
 
   const form = /** @type {HTMLFormElement} */ (document.querySelector('form.search'));
@@ -188,10 +188,10 @@ export async function startPicker(env) {
       grid.replaceChildren();
       setNext(null);
       showMessage(document, 'No Favourites yet. Star a GIF to keep it here.');
-      return;
+      return Promise.resolve();
     }
     const ids = [...favourites];
-    show(async () => ({ gifs: await provider.lookup(ids), next: null }), 'None of your Favourites are available any more.');
+    return show(async () => ({ gifs: await provider.lookup(ids), next: null }), 'None of your Favourites are available any more.');
   };
   favouritesTab.addEventListener('click', showFavourites);
   browseTab.addEventListener('click', () => {
@@ -207,19 +207,20 @@ export async function startPicker(env) {
   const activate = async (id) => {
     // A later switch wins if the user changes Provider again while this one is still loading.
     const mine = ++activation;
+    // Carry on with what was showing: the Favourites tab, or the same search (or trending).
+    const onFavourites = favouritesTab.getAttribute('aria-selected') === 'true';
+    const term = searchBox.value.trim();
     const favourites = favouritesOf[id] ?? (await getFavourites(browser, id));
     if (mine !== activation) return;
     favouritesOf[id] = favourites;
     activeId = id;
     loadingMore = false;
-    selectTab(browseTab);
     info = PROVIDERS[id];
     provider = info.create({ key: /** @type {string} */ (keys[id]), rating, fetch: env.fetch });
     searchBox.setAttribute('aria-label', `Search ${info.name}`);
     searchBox.placeholder = `Search ${info.name}`;
-    searchBox.value = '';
     clearTimeout(typingTimer);
-    shownTerm = '';
+    shownTerm = null;
     attribution.textContent = info.attribution;
     attribution.hidden = info.attribution === '';
     // Drop the other Provider's results so the two are never mixed.
@@ -237,7 +238,8 @@ export async function startPicker(env) {
     }
     searchBox.disabled = false;
     searchBox.focus();
-    await show(provider.trending);
+    if (onFavourites) await showFavourites();
+    else await search(term);
   };
 
   if (withKeys.length > 1) {
