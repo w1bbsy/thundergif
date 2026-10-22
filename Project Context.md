@@ -23,7 +23,7 @@ Install warning decision (22/10/2026): keep the Experiment and explain the "full
 
 ## v1.1 design (grilling, 22/10/2026)
 
-Built 22/10/2026 as 1.1.0: #13 (search kept on switch), #14 (beer link), #15 (GIPHY logo and creator credit). Awaiting the maintainer's manual check; ATN upload waits for 1.0.2's approval.
+Built 22/10/2026 as 1.1.0: #13 (search kept on switch), #14 (beer link), #15 (GIPHY logo and creator credit). Manual check passed; released on GitHub 22/10/2026 (v1.1.0); #13 to #15 closed. ATN upload waits for 1.0.2's approval.
 
 
 | # | Topic | Decision |
