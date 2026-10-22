@@ -2,7 +2,7 @@
 
 A Thunderbird add-on for finding a GIF on GIPHY or KLIPY and dropping it into the email you are writing. Click the GIF button on the compose toolbar, search or pick from what is trending, and click a GIF to insert it at your cursor.
 
-Tested on Thunderbird 158 on macOS. It installs on Thunderbird 140 or later and should work on any platform, but only Thunderbird 158 on macOS has been tested.
+It installs on Thunderbird 140 or later. So far it has only been tested on Thunderbird 158 on macOS.
 
 ## What it does
 
