@@ -56,7 +56,7 @@ The contents of your emails, your contacts and your account details are never re
 
 - Source: https://github.com/w1bbsy/thundergif (MIT). The `.xpi` is the `src/` folder zipped, with no build step, bundling or minification.
 - Experiment `thundergifCompose` (`experiments/compose/implementation.js`): a single function, `allowRemoteImages(tabId)`, that sets `gMsgCompose.allowRemoteContent = true` for a compose tab before the add-on inserts a remote GIF, mirroring what Insert > Image (`EdImageProps.js`) and paste or drop (`onPasteOrDrop` in `MsgComposeCommands.js`) do. Without it, `nsMsgContentPolicy::ComposeShouldLoad` blocks the image in the draft. No WebExtension API can set this flag. The reasoning, alternatives considered and tests are in `docs/adr/0001-experiment-to-show-linked-gifs-in-drafts.md`. A feature request for a proper API is planned, after which the Experiment can be dropped.
-- The Experiment clears the startup cache in `onShutdown` for non-shutdown unloads.
+- The Experiment clears the startup cache in `onShutdown` for non-shutdown unloads, and `strict_max_version` is set to the newest tested release (158.*); it will be raised after testing each new release.
 - `sensitiveDataUpload` is requested because search terms are sent to the hardcoded Provider APIs (GIPHY, KLIPY). The settings page lists what is sent.
 - To test: get a free GIPHY key at developers.giphy.com (or KLIPY at partner.klipy.com), paste it into the add-on's settings, open a new message and click the GIF button.
 - Inserted GIFs carry `moz-do-not-send="true"` so they are sent as remote links, as the Providers' terms require.

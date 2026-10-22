@@ -72,6 +72,7 @@ Install warning decision (22/10/2026): keep the Experiment and explain the "full
 - 1.0.1 prepared for the human review: `sensitiveDataUpload` permission (ATN rule for hardcoded third-party servers), Experiment clears the startup cache on non-shutdown unload, settings page lists what is sent. Listing text, privacy policy and reviewer notes in docs/atn-listing.md.
 - The cache clean-up has not been exercised by a test (it only runs on disable, removal or update).
 - Expect admin review because of the Experiment.
+- 1.0.1 failed ATN validation: Experiments require `strict_max_version`. 1.0.2 sets it to 158.* (newest tested). Each new major Thunderbird release: run checks/thunderbird/check.py on it, raise strict_max_version, bump and release; until then Thundergif is disabled on that version.
 
 ## Release notes (1.0.0, 22/10/2026)
 

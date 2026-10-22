@@ -2,7 +2,7 @@
 
 A Thunderbird add-on for finding a GIF on GIPHY or KLIPY and dropping it into the email you are writing. Click the GIF button on the compose toolbar, search or pick from what is trending, and click a GIF to insert it at your cursor.
 
-It installs on Thunderbird 140 or later. So far it has only been tested on Thunderbird 158 on macOS.
+It runs on Thunderbird 140 up to the newest version it has been tested on (currently 158), and so far has only been tested on Thunderbird 158 on macOS. Because it contains a Thunderbird Experiment (see below), each new major Thunderbird release needs a quick check and an update before Thundergif runs on it.
 
 ## What it does
 
@@ -89,6 +89,7 @@ npm test
 - `npm test` runs the automated tests: the Picker and settings page in a simulated browser with Thunderbird and the network faked, using trimmed real Provider responses.
 - `npm run typecheck` checks types (JSDoc).
 - `npm run build` packages `src/` as `dist/thundergif-<version>.xpi`.
+- **Each new Thunderbird release:** run `checks/thunderbird/check.py` against it, then raise `strict_max_version` in `src/manifest.json`, bump the version and release. addons.thunderbird.net requires that limit for add-ons with an Experiment, so Thundergif is switched off on newer Thunderbird versions until this is done.
 - `checks/thunderbird/check.py` starts a throwaway, headless Thunderbird with an empty profile, installs a check build and confirms an inserted GIF really shows in a draft and that plain-text drafts get the link. Run it before a release and after Thunderbird updates (`pip install -r checks/thunderbird/requirements.txt` first).
 - [docs/manual-checklist.md](docs/manual-checklist.md) lists the checks to do by hand in Thunderbird before a release.
 

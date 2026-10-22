@@ -1,12 +1,13 @@
 {
   "manifest_version": 3,
   "name": "Thundergif",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Search GIPHY or KLIPY and insert a GIF into the email you are writing.",
   "browser_specific_settings": {
     "gecko": {
       "id": "thundergif@w1bbsy.github.io",
-      "strict_min_version": "140.0"
+      "strict_min_version": "140.0",
+      "strict_max_version": "158.*"
     }
   },
   "icons": {
