@@ -8,7 +8,7 @@ Text to paste into the ATN submission form for Thundergif. ATN does not allow ex
 |---|---|
 | Name | Thundergif |
 | Add-on URL | Leave as `thundergif` |
-| Summary | See below (124 of the 160 characters allowed) |
+| Summary | See below (125 of the 160 characters allowed) |
 | This add-on is experimental | **Leave unticked.** This marks an add-on as not ready for general use. It is not about the Experiment API inside Thundergif. |
 | This add-on requires payment, non-free services or software, or additional hardware | **Leave unticked.** It needs a free GIPHY or KLIPY key, nothing paid. The description says a key is needed. |
 | Categories (up to 2) | **Message Composition** only. None of the others fits. |
