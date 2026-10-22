@@ -88,5 +88,7 @@ function toGif(item) {
     description: item.alt_text || item.title || 'GIF',
     preview: { url: preview.url, width: Number(preview.width), height: Number(preview.height) },
     insert: { url: insert.url, width: Number(insert.width), height: Number(insert.height) },
+    // GIPHY's terms ask apps to credit the creator where GIPHY names one.
+    creator: item.user?.display_name || item.username || undefined,
   };
 }

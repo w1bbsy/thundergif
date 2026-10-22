@@ -84,6 +84,11 @@ footer .settings {
   font-size: 11px;
   color: var(--muted);
 }
+.attribution img {
+  display: block;
+  height: 18px;
+  width: auto;
+}
 .search {
   display: flex;
   gap: 6px;

@@ -27,7 +27,23 @@ describe('Picker with a GIPHY Provider key', () => {
   it('shows "Powered By GIPHY" while GIPHY is the Provider', async () => {
     await openPicker();
 
-    expect(await screen.findByText('Powered By GIPHY')).toBeTruthy();
+    expect(await screen.findByRole('img', { name: 'Powered By GIPHY' })).toBeTruthy();
+  });
+
+  it('shows GIPHY\'s own logo, bundled with the add-on rather than loaded from the web', async () => {
+    await openPicker();
+
+    const logo = await screen.findByRole('img', { name: 'Powered By GIPHY' });
+    expect(logo.getAttribute('src')).toBe('../icons/powered-by-giphy.png');
+  });
+
+  it('credits each GIPHY GIF\'s creator in its hover text where GIPHY names one', async () => {
+    await openPicker();
+    const tiles = await gridTiles();
+
+    expect(tiles[0].title).toBe('Boom Bang GIF by Atlanta Dream\nBy Atlanta Dream');
+    expect(tiles[1].title).toBe('Laughter Laughing GIF');
+    expect(tiles[2].title).toMatch(/\nBy stinkyzaba$/);
   });
 
   it('asks GIPHY for 24 trending GIFs at PG with the stored Provider key', async () => {

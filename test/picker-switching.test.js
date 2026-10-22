@@ -44,7 +44,7 @@ describe('Choosing the Provider in the Picker', () => {
     await waitFor(async () => expect(await firstTileDescription()).toBe(KLIPY_FIRST));
     expect(await gridTiles()).toHaveLength(24);
     expect(screen.getByRole('searchbox', { name: 'Search KLIPY' }).value).toBe('');
-    expect(screen.queryByText('Powered By GIPHY')).toBeNull();
+    expect(screen.queryByRole('img', { name: 'Powered By GIPHY' })).toBeNull();
     expect(stored.activeProvider).toBe('klipy');
   });
 

@@ -37,7 +37,7 @@ describe('Picker with only a KLIPY Provider key', () => {
 
     const box = screen.getByRole('searchbox', { name: 'Search KLIPY' });
     expect(box.getAttribute('placeholder')).toBe('Search KLIPY');
-    expect(screen.queryByText('Powered By GIPHY')).toBeNull();
+    expect(screen.queryByRole('img', { name: 'Powered By GIPHY' })).toBeNull();
   });
 
   it('searches KLIPY and pages through results with More', async () => {

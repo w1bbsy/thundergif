@@ -13,6 +13,7 @@
  * @property {string} description
  * @property {Rendition} preview small version shown in the Picker
  * @property {Rendition} insert medium version placed in the email
+ * @property {string} [creator] who made the GIF, where the Provider says
  */
 
 /**

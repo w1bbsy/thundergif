@@ -221,7 +221,14 @@ export async function startPicker(env) {
     searchBox.placeholder = `Search ${info.name}`;
     clearTimeout(typingTimer);
     shownTerm = null;
-    attribution.textContent = info.attribution;
+    if (info.attributionLogo) {
+      const logo = document.createElement('img');
+      logo.src = info.attributionLogo;
+      logo.alt = info.attribution;
+      attribution.replaceChildren(logo);
+    } else {
+      attribution.textContent = info.attribution;
+    }
     attribution.hidden = info.attribution === '';
     // Drop the other Provider's results so the two are never mixed.
     generation++;
@@ -335,6 +342,7 @@ function tile(document, gif, onChoose, favourite) {
   img.width = gif.preview.width;
   img.height = gif.preview.height;
   button.append(img);
+  button.title = gif.creator ? `${gif.description}\nBy ${gif.creator}` : gif.description;
   button.addEventListener('click', onChoose);
   const star = document.createElement('button');
   star.type = 'button';
