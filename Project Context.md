@@ -4,6 +4,8 @@ Personal project, not connected to Averion Strategy. Vocabulary lives in [GLOSSA
 
 ## Status
 
+v1.0.0 released 22/10/2026: https://github.com/w1bbsy/thundergif/releases/tag/v1.0.0
+
 Design agreed through a grilling session on 20/10/2026. Spec written to [docs/spec.md](docs/spec.md) on 20/10/2026, kept in the repo as the reference design. Broken into ten tickets on 20/10/2026, now GitHub issues #1 to #10 with native blocking links and the ready-for-agent label (#1 is the starting point; #2, #3, and #8 can run in parallel after it). Agent skills configured 20/10/2026: GitHub Issues, default triage labels, single-context domain docs (see CLAUDE.md). Public GitHub repo created 20/10/2026: https://github.com/w1bbsy/thundergif . Issue #1 (walking skeleton) implemented 21/10/2026. Manual check 21/10/2026: install, key, trending, attribution, insert at cursor, undo, and sent-as-link all passed; GIFs showed broken in the draft. Fixed 22/10/2026 with an Experiment (see docs/adr/0001), verified by the real-Thunderbird check; final manual check of 0.1.2 passed 22/10/2026; issue #1 closed. Issues #2, #3, #8 implemented 22/10/2026 (0.2.0), awaiting manual check; #11 icon drafted, awaiting approval.
 
 ## Current plan (remaining v1 work, started 22/10/2026)
@@ -13,8 +15,8 @@ Design agreed through a grilling session on 20/10/2026. Spec written to [docs/sp
 3. #6 Key check and error messages - done (committed), manual check pending
 4. #7 Favourites - done (committed), manual check pending
 5. #9 Keyboard use - done (committed), manual check pending
-6. #10 v1 release - README, licence, manual checklist, release notes and 1.0.0 build done (committed); manual checklist run and publishing the GitHub Release are the maintainer's steps
-7. Thunderbird feature request drafted at docs/upstream/thunderbird-feature-request-insert-remote-images.md - on the maintainer's backlog (GitHub issue) to post
+6. #10 v1 release - done: v1.0.0 published on GitHub Releases 22/10/2026, #10 closed
+7. Thunderbird feature request drafted at docs/upstream/thunderbird-feature-request-insert-remote-images.md - on the maintainer's backlog as issue #12
 8. Code review done; manual checklist passed on Thunderbird 158 (22/10/2026); #4, #5, #6, #7, #9 closed
 
 Install warning decision (22/10/2026): keep the Experiment and explain the "full, unrestricted access" warning in the README; Thunderbird shows it for any add-on with an Experiment and it cannot be softened.
