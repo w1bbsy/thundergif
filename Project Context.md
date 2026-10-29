@@ -83,6 +83,12 @@ Built 22/10/2026 as 1.1.0: #13 (search kept on switch), #14 (beer link), #15 (GI
 - Plain-text emails get the GIF's medium media URL typed at the cursor (undoable insertText).
 - `checks/thunderbird/check.py` now also checks the plain-text path in a real Thunderbird.
 
+## Thunderbird 159 (29/10/2026)
+
+- Maintainer updated to Thunderbird 159.0; Thundergif (capped at 158) is switched off with "incompatible with Thunderbird 159.0".
+- Real-Thunderbird check on 159: with the cap raised to 159 everything passes, so the Experiment works unchanged. The check script needs MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1 on 159.
+- Spec published as issue #16 (cap 159, version 1.1.1, check extended to report installed version and stale cap, one-step update command).
+
 ## addons.thunderbird.net (22/10/2026)
 
 - 1.0.2 approved on ATN (https://addons.thunderbird.net/thunderbird/addon/thundergif/). 1.1.0 uploaded with user-facing version notes, awaiting review (23/10/2026). While it waits, the listing shows "not reviewed by Mozilla" and the add-on is missing from ATN search; expected to appear once 1.1.0 is approved.
