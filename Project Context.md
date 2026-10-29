@@ -88,7 +88,7 @@ Built 22/10/2026 as 1.1.0: #13 (search kept on switch), #14 (beer link), #15 (GI
 - Maintainer updated to Thunderbird 159.0; Thundergif (capped at 158) is switched off with "incompatible with Thunderbird 159.0".
 - Real-Thunderbird check on 159: with the cap raised to 159 everything passes, so the Experiment works unchanged. The check script needs MOZ_REMOTE_ALLOW_SYSTEM_ACCESS=1 on 159.
 - Spec published as issue #16 (cap 159, version 1.1.1, check extended to report installed version and stale cap, one-step update command).
-- Built 29/10/2026: 1.1.1 (cap 159.*). checks/thunderbird/check.py now sets MOZ_REMOTE_ALLOW_SYSTEM_ACCESS, reports installed version vs cap, and gives one of three verdicts; `npm run compat -- <major>` raises the cap, bumps the patch version and builds. Check passes on 159. 1.1.1 to replace 1.1.0 in the ATN queue.
+- Built 29/10/2026: 1.1.1 (cap 159.*). checks/thunderbird/check.py now sets MOZ_REMOTE_ALLOW_SYSTEM_ACCESS, reports installed version vs cap, and gives one of three verdicts; `npm run compat -- <major>` raises the cap, bumps the patch version and builds. Check passes on 159. Maintainer confirmed on 159; released on GitHub (v1.1.1) and uploaded to ATN replacing 1.1.0, 29/10/2026. #16 closed.
 
 ## addons.thunderbird.net (22/10/2026)
 
