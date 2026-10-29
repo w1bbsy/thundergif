@@ -91,7 +91,9 @@ Built 22/10/2026 as 1.1.0: #13 (search kept on switch), #14 (beer link), #15 (GI
 
 ## addons.thunderbird.net (22/10/2026)
 
-- 1.0.2 approved on ATN (https://addons.thunderbird.net/thunderbird/addon/thundergif/). 1.1.0 uploaded with user-facing version notes, awaiting review (23/10/2026). While it waits, the listing shows "not reviewed by Mozilla" and the add-on is missing from ATN search; expected to appear once 1.1.0 is approved.
+- Correction (29/10/2026): 1.0.2 was never approved. Uploading 1.1.0 while 1.0.2 was still unreviewed made ATN disable 1.0.2 (shown as "Disabled by Mozilla"). 1.1.0 is the only version in review (queue position 68 of 89 on 29/10/2026), so no version is approved yet and Thundergif is not in ATN search. Listing: https://addons.thunderbird.net/thunderbird/addon/thundergif/
+- ATN's per-version Compatibility field (Edit this version) offers Max 159.*, but Thunderbird enforces the cap inside the add-on file, so it is not expected to fix installs (unconfirmed).
+- Listing had an "imgur" tag; maintainer asked to remove it.
 
 - Maintainer is submitting manually. 1.0.0 passed ATN's automatic validation (2 expected warnings: Thunderbird-only `compose` permission and API).
 - 1.0.1 prepared for the human review: `sensitiveDataUpload` permission (ATN rule for hardcoded third-party servers), Experiment clears the startup cache on non-shutdown unload, settings page lists what is sent. Listing text, privacy policy and reviewer notes in docs/atn-listing.md.
