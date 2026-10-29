@@ -6,9 +6,14 @@ profile, accounts or mail), installs a check build of the add-on, opens a new HT
 lets the add-on insert a GIF through its real insertion path, and reports whether
 Thunderbird actually loaded the image.
 
+It also compares the installed Thunderbird with the add-on's cap (strict_max_version, which
+addons.thunderbird.net requires because Thundergif contains an Experiment). If the cap is below
+the installed version, Thunderbird would switch the add-on off, so the check says so, fails,
+and tests the add-on with the cap raised to show whether raising it is safe.
+
 Usage: python checks/thunderbird/check.py [path-to-src] [--headed]
 Needs Thunderbird installed and `pip install -r checks/thunderbird/requirements.txt`.
-Exit code 0 = pass, 1 = fail.
+Exit code 0 = everything passes on the installed Thunderbird, 1 = anything else.
 """
 import json, os, re, shutil, subprocess, sys, tempfile, time, zipfile
 from marionette_driver.marionette import Marionette
@@ -80,13 +85,15 @@ return Array.from(doc.images).map(i => ({ alt: i.alt, complete: i.complete, natu
 """
 
 
-def build_check_xpi(work):
+def build_check_xpi(work, cap=None):
     addon = os.path.join(work, 'addon')
     shutil.copytree(SRC, addon, ignore=shutil.ignore_patterns('*.d.ts', '.DS_Store'))
     shutil.copy(os.path.join(HERE, 'check-background.js'), addon)
     manifest_path = os.path.join(addon, 'manifest.json')
     manifest = json.load(open(manifest_path))
     manifest['background'] = {'scripts': ['check-background.js'], 'type': 'module'}
+    if cap:
+        manifest['browser_specific_settings']['gecko']['strict_max_version'] = cap
     json.dump(manifest, open(manifest_path, 'w'))
     xpi = os.path.join(work, 'check.xpi')
     with zipfile.ZipFile(xpi, 'w') as z:
@@ -97,23 +104,44 @@ def build_check_xpi(work):
     return xpi, manifest['browser_specific_settings']['gecko']['id']
 
 
-def main():
+def installed_major():
+    """The major version of the installed Thunderbird, e.g. 159."""
+    out = subprocess.run([THUNDERBIRD, '--version'], capture_output=True, text=True).stdout
+    return int(re.search(r'(\d+)\.', out).group(1)), out.strip()
+
+
+def manifest_cap():
+    """The add-on's cap, e.g. '158.*', and its major version."""
+    manifest = json.load(open(os.path.join(SRC, 'manifest.json')))
+    cap = manifest['browser_specific_settings']['gecko'].get('strict_max_version', '*')
+    return cap, (None if cap == '*' else int(cap.split('.')[0]))
+
+
+def run_drafts(cap=None):
+    """Installs a check build in a throwaway Thunderbird and tests both draft types.
+    Returns True when the GIF shows in an HTML draft and its link lands in a plain-text one."""
     work = tempfile.mkdtemp(prefix='thundergif-check-')
     profile = os.path.join(work, 'profile')
     os.makedirs(profile)
     with open(os.path.join(profile, 'user.js'), 'w') as f:
         for key, value in PREFS.items():
             f.write(f'user_pref({json.dumps(key)}, {json.dumps(value)});\n')
-    xpi, _ = build_check_xpi(work)
+    xpi, _ = build_check_xpi(work, cap)
     args = [THUNDERBIRD, '--profile', profile, '--marionette', '--no-remote', '--remote-allow-system-access']
     if HEADLESS:
         args.append('--headless')
-    thunderbird = subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # Thunderbird 159 and later also need this before Marionette may act with system access.
+    env = {**os.environ, 'MOZ_REMOTE_ALLOW_SYSTEM_ACCESS': '1'}
+    thunderbird = subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env)
     try:
         client = Marionette(host='127.0.0.1', port=PORT)
         client.start_session()
         client.set_context(client.CONTEXT_CHROME)
-        Addons(client).install(xpi, temp=True)
+        try:
+            Addons(client).install(xpi, temp=True)
+        except Exception as error:
+            print(f'FAIL: Thunderbird refused to install the add-on ({type(error).__name__})')
+            return False
         time.sleep(1)
         client.execute_script(OPEN_DRAFT, script_args=[False])
         images = None
@@ -137,12 +165,29 @@ def main():
                 break
         plain_ok = GIF_URL in text and client.execute_script(DRAFT_IMAGES) == []
         print('PASS: GIF link typed into the plain-text draft' if plain_ok else f'FAIL: plain-text draft holds {text!r}')
-        ok = html_ok and plain_ok
-        return 0 if ok else 1
+        return html_ok and plain_ok
     finally:
         thunderbird.terminate()
         thunderbird.wait(timeout=30)
         shutil.rmtree(work, ignore_errors=True)
+
+
+def main():
+    major, version_text = installed_major()
+    cap, cap_major = manifest_cap()
+    print(f'Installed: {version_text}. Thundergif cap: {cap}.')
+    if cap_major is None or cap_major >= major:
+        ok = run_drafts()
+        print('RESULT: all good on this Thunderbird.' if ok else 'RESULT: Thundergif fails on this Thunderbird. A real fix is needed, not just a cap change.')
+        return 0 if ok else 1
+    print(f'Thundergif\'s cap is {cap}, below Thunderbird {major}: Thunderbird would switch it off.')
+    print(f'Testing with the cap raised to {major}.* ...')
+    ok = run_drafts(cap=f'{major}.*')
+    if ok:
+        print(f'RESULT: raise the cap to {major}.* (it works). Run: npm run compat -- {major}')
+    else:
+        print('RESULT: Thundergif fails on this Thunderbird even with the cap raised. A real fix is needed.')
+    return 1
 
 
 sys.exit(main())
