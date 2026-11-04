@@ -83,6 +83,13 @@ Built 22/10/2026 as 1.1.0: #13 (search kept on switch), #14 (beer link), #15 (GI
 - Plain-text emails get the GIF's medium media URL typed at the cursor (undoable insertText).
 - `checks/thunderbird/check.py` now also checks the plain-text path in a real Thunderbird.
 
+## ATN rejection (04/11/2026)
+
+- 1.1.1 rejected by ATN reviewer: "not accepting new submissions using Experiment APIs, except unmodified copies of the latest published API drafts" (thundergifCompose is not one). Version disabled. Thundergif counts as new, since no version was ever approved.
+- The cited announcement (Topicbox, 17 March) describes a temporary pause "until after the release of Thunderbird ESR 153", which has shipped; the reviewer's wording is stricter and open-ended. Sources conflict.
+- Published drafts in thunderbird/webext-experiments: calendar, NotificationBox only; nothing for compose or images.
+- Decision: A then B. A: ask the reviewers whether the pause has ended (draft in docs/upstream/atn-reviewers-experiment-question.md; maintainer sends). B if no: a separate plain ATN edition without the Experiment and with its own add-on ID (no install warning, no strict_max_version chore; draft shows a broken image unless the user adds remote-content exceptions, recipients unaffected). The full version stays on GitHub.
+
 ## Thunderbird 159 (29/10/2026)
 
 - Maintainer updated to Thunderbird 159.0; Thundergif (capped at 158) is switched off with "incompatible with Thunderbird 159.0".
