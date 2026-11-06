@@ -179,3 +179,33 @@ footer .settings {
   background: var(--tile);
   font-weight: 600;
 }
+/* Notice bar (ATN edition only): blank boxes while writing are expected. */
+.notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  margin: 0 0 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--tile);
+  font-size: 12px;
+}
+.notice[hidden] {
+  display: none;
+}
+.notice span {
+  flex: 1 1 100%;
+}
+.notice button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--focus);
+  font: inherit;
+  cursor: pointer;
+}
+.notice .dismiss {
+  margin-left: auto;
+  color: var(--muted);
+}

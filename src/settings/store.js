@@ -101,3 +101,20 @@ export function setFavourites(browser, provider, ids) {
 
 /** @type {Promise<void>} */
 let favouritesWrites = Promise.resolve();
+
+/**
+ * Whether the user has dismissed the Notice bar, which then stays hidden in the Picker and on
+ * the settings page.
+ *
+ * @param {any} browser
+ * @returns {Promise<boolean>}
+ */
+export async function getNoticeDismissed(browser) {
+  const { noticeDismissed } = await browser.storage.local.get('noticeDismissed');
+  return noticeDismissed === true;
+}
+
+/** @param {any} browser */
+export async function setNoticeDismissed(browser) {
+  await browser.storage.local.set({ noticeDismissed: true });
+}

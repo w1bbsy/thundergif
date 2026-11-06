@@ -43,3 +43,31 @@ body {
   font-size: 12px;
   opacity: 0.85;
 }
+/* Notice bar (ATN edition only): blank boxes while writing are expected. */
+.notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  max-width: 420px;
+  box-sizing: border-box;
+  margin-bottom: 16px;
+  padding: 8px 10px;
+  border: 1px solid #8f8f9d;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.notice[hidden] {
+  display: none;
+}
+.notice span {
+  flex: 1;
+}
+.notice button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: LinkText;
+  font: inherit;
+  cursor: pointer;
+}

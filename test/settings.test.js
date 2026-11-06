@@ -3,14 +3,15 @@ import { screen, waitFor } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
 import { loadPage, fakeThunderbird, fakeNetwork } from './fakes.js';
 import { startSettings } from '../src/settings/settings.js';
+import { GIPHY_KEY, gridTiles, openPicker } from './picker-harness.js';
 
 const giphyWorks = { prefix: 'https://api.giphy.com/v1/gifs/', fixture: 'giphy-trending.json' };
 const klipyWorks = { prefix: 'https://api.klipy.com/api/v1/', fixture: 'klipy-trending.json' };
 const answer = (prefix, status, json) => ({ prefix, status, json });
 
-async function openSettings({ storage = {}, granted = true, routes = [giphyWorks, klipyWorks] } = {}) {
+async function openSettings({ storage = {}, granted = true, routes = [giphyWorks, klipyWorks], edition = 'live' } = {}) {
   loadPage('settings/settings.html');
-  const tb = fakeThunderbird({ storage, granted });
+  const tb = fakeThunderbird({ storage, granted, edition });
   const net = fakeNetwork(routes);
   await startSettings({ document, browser: tb.browser, fetch: net.fetch });
   return { ...tb, ...net };
@@ -195,5 +196,41 @@ describe('Buy me a beer', () => {
     await userEvent.click(screen.getByRole('link', { name: 'Buy me a beer' }));
 
     expect(browser.windows.opened).toEqual(['https://donate.stripe.com/dRm14m0RbfEqaMg3S0a3u00']);
+  });
+});
+
+describe('Notice bar on the settings page', () => {
+  const NOTICE = /GIFs show as a blank box while you write, but your recipients see them/i;
+
+  it('explains blank boxes in the ATN edition', async () => {
+    await openSettings({ edition: 'atn' });
+
+    expect(await screen.findByText(NOTICE)).toBeTruthy();
+  });
+
+  it('never appears in Thundergif Live', async () => {
+    await openSettings({ edition: 'live' });
+
+    expect(screen.queryByText(NOTICE)).toBeNull();
+  });
+
+  it('stays dismissed in the Picker once dismissed here', async () => {
+    const { stored } = await openSettings({ edition: 'atn' });
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Dismiss this notice' }));
+    expect(screen.queryByText(NOTICE)).toBeNull();
+
+    await openPicker({ edition: 'atn', storage: { ...stored, giphyKey: GIPHY_KEY } });
+    await gridTiles();
+    expect(screen.queryByText(NOTICE)).toBeNull();
+  });
+
+  it('does not appear once dismissed in the Picker', async () => {
+    const { stored } = await openPicker({ edition: 'atn' });
+    await userEvent.click(await screen.findByRole('button', { name: 'Dismiss this notice' }));
+
+    await openSettings({ edition: 'atn', storage: stored });
+
+    expect(screen.queryByText(NOTICE)).toBeNull();
   });
 });

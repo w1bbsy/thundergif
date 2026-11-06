@@ -1,6 +1,7 @@
 import { PROVIDERS, PROVIDER_IDS, PROVIDER_NAMES } from '../providers/providers.js';
 import { insertIntoCompose, isPlainText } from '../compose/insert.js';
 import { ProviderError } from '../providers/provider-request.js';
+import { showNoticeBar } from '../notice/notice-bar.js';
 import {
   getProviderKey,
   getRating,
@@ -25,6 +26,9 @@ export async function startPicker(env) {
   const searchBox = /** @type {HTMLInputElement} */ (document.querySelector('form.search input'));
   document.querySelector('button.settings')?.addEventListener('click', () => browser.runtime.openOptionsPage());
   document.querySelector('main.picker')?.addEventListener('keydown', (event) => keyboard(env, searchBox, /** @type {KeyboardEvent} */ (event)));
+  await showNoticeBar(document, browser, /** @type {HTMLElement} */ (document.querySelector('.notice')), {
+    showSteps: () => browser.runtime.openOptionsPage(),
+  });
   const composeTab = await findComposeTab(browser);
   if (composeTab && (await isPlainText(browser, composeTab.id))) {
     /** @type {HTMLElement} */ (document.querySelector('.note')).hidden = false;

@@ -9,6 +9,7 @@ import {
 } from './store.js';
 import { PROVIDERS, PROVIDER_IDS } from '../providers/providers.js';
 import { ProviderError } from '../providers/provider-request.js';
+import { showNoticeBar } from '../notice/notice-bar.js';
 
 /**
  * @typedef {object} SettingsEnv
@@ -23,6 +24,7 @@ export async function startSettings({ document, browser, fetch }) {
   const status = /** @type {HTMLElement} */ (document.querySelector('.status'));
   const ratingField = /** @type {HTMLSelectElement} */ (document.getElementById('rating'));
   const keyField = (/** @type {string} */ id) => /** @type {HTMLInputElement} */ (document.getElementById(`${id}-key`));
+  await showNoticeBar(document, browser, /** @type {HTMLElement} */ (document.querySelector('.notice')));
 
   /**
    * The key each Provider was last checked with, so unchanged keys are not checked again.
