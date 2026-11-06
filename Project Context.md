@@ -66,7 +66,7 @@ Built 22/10/2026 as 1.1.0: #13 (search kept on switch), #14 (beer link), #15 (GI
 
 ## Build notes (issue #1)
 
-- Host permissions cover GIPHY's API and media servers (media, media0 to media4, i.giphy.com). Adding media hosts (0.1.1) was a wrong guess at the draft bug, but they are kept: the add-on's own pages load GIPHY media.
+- Host permissions cover GIPHY's API and media servers (media, media0 to media4, i.giphy.com). Adding media hosts (0.1.1) was a wrong guess at the draft bug, but they are kept: the add-on's own pages load GIPHY media. Superseded 06/11/2026 (1.2.1): see the 1.2.1 entry under ATN rejection.
 - Real cause of the broken draft image: Thunderbird's compose window blocks remote images unless its allowRemoteContent flag is on, which only its own UI actions set. Fixed with the `thundergifCompose` Experiment (docs/adr/0001-experiment-to-show-linked-gifs-in-drafts.md).
 - `checks/thunderbird/check.py` runs a throwaway headless Thunderbird (empty profile) and checks an inserted GIF really loads in the draft. Needs Thunderbird and `pip install -r checks/thunderbird/requirements.txt`. Run before releases and after Thunderbird updates.
 - Permission prompts from the Picker popup did not work (button never cleared). The Picker now sends the user to settings, where the "Allow access to GIPHY" button asks.
@@ -112,6 +112,8 @@ Built 22/10/2026 as 1.1.0: #13 (search kept on switch), #14 (beer link), #15 (GI
 - 1.2.0 ready to release (06/11/2026). Maintainer steps: publish a GitHub Release v1.2.0 with dist/thundergif-1.2.0.xpi and dist/thundergif-live-1.2.0.xpi and the notes in docs/release-notes/v1.2.0.md; upload dist/thundergif-1.2.0.xpi (never the Live file) to the existing ATN listing, replacing description, privacy policy, and reviewer notes from docs/atn-listing.md; remove own 1.1.1 and install Thundergif Live; run docs/manual-checklist.md.
 
 - 06/11/2026: maintainer uploaded thundergif-1.2.0.xpi to the existing ATN listing and replaced its description, privacy policy, and reviewer notes; awaiting ATN review. GitHub Release v1.2.0 published 06/11/2026 by the maintainer (Claude Code's auto mode blocks the agent from running `gh release create`): https://github.com/w1bbsy/thundergif/releases/tag/v1.2.0 , with thundergif-1.2.0.xpi and thundergif-live-1.2.0.xpi; #17 closed. Still to do: maintainer swaps own 1.1.1 for Thundergif Live and runs docs/manual-checklist.md; ATN review pending.
+
+- 1.2.1 (06/11/2026): the maintainer's install of the ATN edition showed 12 server lines in the permission prompt. Host permissions trimmed to api.giphy.com, media.giphy.com, api.klipy.com, and static.klipy.com (the servers searched and inserted from). Proven in real Thunderbird 159: previews from servers without a permission (media1.giphy.com, static2.klipy.com) load on the add-on's pages, and both Editions pass the full check; the check now tests this every run. Removing permissions means no prompt for updating users. Decided the same day: users keep bringing their own Provider key (decision 5 stands); neither GIPHY nor KLIPY offers keyless search, and a shipped key would be public, shared, and revocable for everyone.
 
 ## Thunderbird 159 (29/10/2026)
 

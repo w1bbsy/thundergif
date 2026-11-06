@@ -13,19 +13,11 @@ const keyRejected = (/** @type {Response} */ r) => r.status === 401 || r.status 
 export const GIPHY_MEDIA_SERVER = 'media.giphy.com';
 
 /**
- * Host permissions the add-on needs for GIPHY: the API, plus the media servers, because a GIF
- * placed in the compose editor by the add-on is loaded on the add-on's behalf.
+ * Host permissions the add-on needs for GIPHY: the API, plus the one media server GIFs are
+ * inserted from. Previews in the Picker come from GIPHY's other media servers too, but load as
+ * ordinary images, which need no permission (the real-Thunderbird check proves this).
  */
-export const GIPHY_ORIGINS = [
-  'https://api.giphy.com/*',
-  'https://media.giphy.com/*',
-  'https://media0.giphy.com/*',
-  'https://media1.giphy.com/*',
-  'https://media2.giphy.com/*',
-  'https://media3.giphy.com/*',
-  'https://media4.giphy.com/*',
-  'https://i.giphy.com/*',
-];
+export const GIPHY_ORIGINS = ['https://api.giphy.com/*', `https://${GIPHY_MEDIA_SERVER}/*`];
 
 /**
  * @param {{ key: string, rating: import('../settings/store.js').Rating, fetch: typeof globalThis.fetch }} options

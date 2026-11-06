@@ -219,12 +219,15 @@ def settings_steps(client):
     for _ in range(40):
         time.sleep(0.5)
         state = client.execute_script(SETTINGS_STATE)
-        if state and state['copyAt']:
+        if state and state['copyAt'] and state['previewsLoaded']:
             break
     print('Settings page:', json.dumps(state))
     at_steps = bool(state) and state['shown'] and state['inView'] and state['scrolled']
     print('PASS: the Notice bar link\'s window opens the settings page at the steps' if at_steps
           else 'FAIL: settings page did not open at the steps')
+    previews_ok = bool(state) and state['previewsLoaded']
+    print('PASS: previews from servers without a permission load on the add-on\'s pages' if previews_ok
+          else 'FAIL: previews from media1.giphy.com or static2.klipy.com did not load')
     if not (state and state['copyAt']):
         return False
     # A real click inside the page, as the user makes: the page is out of reach, so aim at its frame.
@@ -242,7 +245,7 @@ def settings_steps(client):
     copy_ok = copied == EXCEPTIONS[0]
     print(f'PASS: Copy puts {copied} on the clipboard, no permission needed' if copy_ok
           else f'FAIL: Copy left {copied!r} on the clipboard ({(client.execute_script(SETTINGS_STATE) or {}).get("status")})')
-    return at_steps and copy_ok
+    return at_steps and copy_ok and previews_ok
 
 
 def run_drafts(edition, cap=None):

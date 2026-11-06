@@ -6,7 +6,7 @@ There are two editions (ADR 0002): Thundergif (`thundergif-<version>.xpi`, for a
 
 ## Install
 
-- [ ] Thundergif installs from file with no "full, unrestricted access" warning, and Add-ons and Themes lists it as "Thundergif".
+- [ ] Thundergif installs from file with no "full, unrestricted access" warning, and Add-ons and Themes lists it as "Thundergif". The prompt lists four servers: api.giphy.com, media.giphy.com, api.klipy.com, and static.klipy.com.
 - [ ] Thundergif Live installs from file; the install prompt shows the "full, unrestricted access" warning (expected, see README), and Add-ons and Themes lists it as "Thundergif Live".
 - [ ] With both installed, the compose toolbar shows two GIF buttons; hovering shows "Insert a GIF" and "Insert a GIF (Thundergif Live)".
 - [ ] Add-ons and Themes shows the bird icon for both.

@@ -11,13 +11,11 @@ const keyRejected = (/** @type {Response} */ r) => [401, 403, 404].includes(r.st
 /** The one media server GIFs are inserted from; the ATN edition's users add it as an exception. */
 export const KLIPY_MEDIA_SERVER = 'static.klipy.com';
 
-/** Host permissions the add-on needs for KLIPY: the API and its media servers. */
-export const KLIPY_ORIGINS = [
-  'https://api.klipy.com/*',
-  'https://static.klipy.com/*',
-  'https://static1.klipy.com/*',
-  'https://static2.klipy.com/*',
-];
+/**
+ * Host permissions the add-on needs for KLIPY: the API, plus the one media server GIFs are
+ * inserted from. Previews from KLIPY's other servers need no permission (see GIPHY_ORIGINS).
+ */
+export const KLIPY_ORIGINS = ['https://api.klipy.com/*', `https://${KLIPY_MEDIA_SERVER}/*`];
 
 /**
  * KLIPY filters by content level rather than rating. Mapping from GIPHY's Tenor migration notes;
