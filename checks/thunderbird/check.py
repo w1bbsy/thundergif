@@ -172,14 +172,17 @@ def manifest_cap():
     return cap, (None if cap == '*' else int(cap.split('.')[0]))
 
 
-def html_draft_images(client):
-    """Opens a new HTML draft (the check build inserts its GIFs) and returns its images once loaded."""
+def html_draft_images(client, expect_shown=False):
+    """Opens a new HTML draft (the check build inserts its GIFs) and returns its images once loaded.
+    A blocked or failed image also counts as loaded, so when the GIFs should show, keep waiting a
+    while for them in case a download is slow."""
     client.execute_script(OPEN_DRAFT, script_args=[False])
     images = []
-    for _ in range(30):
+    for _ in range(30 if not expect_shown else 60):
         time.sleep(0.5)
         images = client.execute_script(DRAFT_IMAGES) or []
-        if len(images) == len(GIF_URLS) and all(i['complete'] for i in images):
+        settled = len(images) == len(GIF_URLS) and all(i['complete'] for i in images)
+        if settled and (not expect_shown or all(i['naturalWidth'] > 0 for i in images)):
             break
     print('HTML draft images:', json.dumps(images))
     return images
@@ -268,7 +271,7 @@ def run_drafts(edition, cap=None):
             print(f'FAIL: Thunderbird refused to install the add-on ({type(error).__name__})')
             return False
         time.sleep(1)
-        images = html_draft_images(client)
+        images = html_draft_images(client, expect_shown=edition == 'live')
         linked = len(images) == len(GIF_URLS) and all(i['mozDoNotSend'] == 'true' for i in images)
         shown = linked and all(i['naturalWidth'] > 0 for i in images)
         if edition == 'live':
@@ -284,7 +287,7 @@ def run_drafts(edition, cap=None):
             client.execute_script(CLOSE_DRAFT)
             time.sleep(1)
             client.execute_script(ADD_EXCEPTIONS, script_args=[EXCEPTIONS])
-            images = html_draft_images(client)
+            images = html_draft_images(client, expect_shown=True)
             excepted_ok = len(images) == len(GIF_URLS) and all(i['naturalWidth'] > 0 for i in images)
             print(f'PASS: GIFs show once {" and ".join(EXCEPTIONS)} are remote-content exceptions' if excepted_ok
                   else 'FAIL: GIFs still blocked with one exception per Provider')
