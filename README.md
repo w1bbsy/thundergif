@@ -19,7 +19,7 @@ Not sure? Choose Thundergif. Choose Thundergif Live if you want GIFs to show whi
 
 Why two? addons.thunderbird.net is not accepting new add-ons that contain a Thunderbird Experiment until at least 2027, and showing GIFs while you write needs one. The reasoning is in [docs/adr/0002](docs/adr/0002-two-editions-for-atn.md).
 
-You can install both, but you will then have two GIF buttons. They keep separate keys, settings and Favourites.
+You can install both, but you will then have two GIF buttons. They keep separate keys, settings, and Favourites.
 
 ## What it does
 

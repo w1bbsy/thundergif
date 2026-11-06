@@ -8,10 +8,10 @@ const LOOKUP_LIMIT = 50;
 /** KLIPY puts the key in the path and answers a bad one with 404 (or 401/403). */
 const keyRejected = (/** @type {Response} */ r) => [401, 403, 404].includes(r.status);
 
-/** Host permissions the add-on needs for KLIPY: the API and its media servers. */
 /** The one media server GIFs are inserted from; the ATN edition's users add it as an exception. */
 export const KLIPY_MEDIA_SERVER = 'static.klipy.com';
 
+/** Host permissions the add-on needs for KLIPY: the API and its media servers. */
 export const KLIPY_ORIGINS = [
   'https://api.klipy.com/*',
   'https://static.klipy.com/*',

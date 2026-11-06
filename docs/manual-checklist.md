@@ -2,7 +2,7 @@
 
 Run by hand before each release, on the newest Thunderbird (Apple Silicon Mac) and Thunderbird 140 ESR. Record the results on the release issue. Run `checks/thunderbird/check.py` first; it covers inserting into HTML and plain-text drafts, the exceptions and the Copy button automatically.
 
-There are two editions (ADR 0002): Thundergif (`thundergif-<version>.xpi`, for addons.thunderbird.net) and Thundergif Live (`thundergif-live-<version>.xpi`, GitHub only). Run the Settings, Picker, Plain-text and Sending sections on Thundergif Live, plus the Thundergif section on Thundergif. The rest of the code is shared.
+There are two editions (ADR 0002): Thundergif (`thundergif-<version>.xpi`, for addons.thunderbird.net) and Thundergif Live (`thundergif-live-<version>.xpi`, GitHub only). Run the Settings, Picker, Plain-text, and Sending sections on Thundergif Live, plus the Thundergif section on Thundergif. The rest of the code is shared.
 
 ## Install
 

@@ -2,7 +2,7 @@
 
 Text to paste into the ATN submission form for Thundergif, the ATN edition (ADR 0002). From 1.2.0 the file to upload is `dist/thundergif-<version>.xpi`, which has no Experiment. Never upload `thundergif-live-<version>.xpi`. ATN does not allow external links in the description, so there are none below; links are fine in the notes to the reviewer.
 
-For 1.2.0 the listing already exists, so only the description, privacy policy and reviewer notes need replacing with the text below.
+For 1.2.0 the listing already exists, so only the description, privacy policy, and reviewer notes need replacing with the text below.
 
 ## Form fields, in the order ATN asks for them
 

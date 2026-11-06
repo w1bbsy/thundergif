@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
 import { loadPage, fakeThunderbird, fakeNetwork, fakeClipboard } from './fakes.js';
@@ -237,6 +237,7 @@ describe('Notice bar on the settings page', () => {
 });
 
 describe('Show GIFs while you write', () => {
+  afterEach(() => delete window.navigator.clipboard);
   const steps = () => screen.getByRole('region', { name: 'Show GIFs while you write' });
 
   it('gives the ATN edition the steps to add each GIF server as a remote-content exception', async () => {
@@ -287,7 +288,7 @@ describe('Show GIFs while you write', () => {
   it('mentions Thundergif Live and opens its GitHub page in the default browser', async () => {
     const { browser } = await openSettings({ edition: 'atn' });
 
-    expect(steps().textContent).toMatch(/Thundergif Live, a version that shows GIFs while you write/);
+    expect(steps().textContent).toMatch(/Thundergif Live, an edition that shows GIFs while you write/);
     expect(steps().textContent).toMatch(/not listed on addons\.thunderbird\.net/);
     await userEvent.click(screen.getByRole('link', { name: "the project's GitHub page" }));
 
@@ -296,12 +297,17 @@ describe('Show GIFs while you write', () => {
 
   it('scrolls to the steps when opened from the Notice bar', async () => {
     const scrolledTo = [];
+    // The simulated browser cannot scroll, so note what the page asks to bring into view.
     window.HTMLElement.prototype.scrollIntoView = function () {
       scrolledTo.push(this);
     };
-    await openSettings({ edition: 'atn', hash: '#show-gifs' });
+    try {
+      await openSettings({ edition: 'atn', hash: '#show-gifs' });
 
-    expect(scrolledTo).toEqual([steps()]);
+      expect(scrolledTo).toEqual([steps()]);
+    } finally {
+      delete window.HTMLElement.prototype.scrollIntoView;
+    }
   });
 
   it('is not shown in Thundergif Live, whose drafts show GIFs', async () => {

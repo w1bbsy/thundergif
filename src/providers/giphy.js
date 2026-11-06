@@ -9,13 +9,13 @@ const LOOKUP_LIMIT = 100;
 /** GIPHY answers a bad key with 401 (or 403 for a banned one). */
 const keyRejected = (/** @type {Response} */ r) => r.status === 401 || r.status === 403;
 
+/** The one media server GIFs are inserted from; the ATN edition's users add it as an exception. */
+export const GIPHY_MEDIA_SERVER = 'media.giphy.com';
+
 /**
  * Host permissions the add-on needs for GIPHY: the API, plus the media servers, because a GIF
  * placed in the compose editor by the add-on is loaded on the add-on's behalf.
  */
-/** The one media server GIFs are inserted from; the ATN edition's users add it as an exception. */
-export const GIPHY_MEDIA_SERVER = 'media.giphy.com';
-
 export const GIPHY_ORIGINS = [
   'https://api.giphy.com/*',
   'https://media.giphy.com/*',

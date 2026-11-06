@@ -211,7 +211,8 @@ return out.value.QueryInterface(Ci.nsISupportsString).data;
 
 
 def settings_steps(client):
-    """Opens the settings page as the Notice bar link does, then clicks Copy for GIPHY. True when
+    """Opens the settings page through the function the Notice bar link calls (the check cannot
+    click inside the Picker), then clicks Copy for GIPHY. True when
     the page opens scrolled to the steps and the GIPHY address lands on the clipboard."""
     client.execute_script(OPEN_CONTENT_TAB)
     state = None
@@ -222,14 +223,15 @@ def settings_steps(client):
             break
     print('Settings page:', json.dumps(state))
     at_steps = bool(state) and state['shown'] and state['inView'] and state['scrolled']
-    print('PASS: Notice bar link opens the settings page at the steps' if at_steps
+    print('PASS: the Notice bar link\'s window opens the settings page at the steps' if at_steps
           else 'FAIL: settings page did not open at the steps')
     if not (state and state['copyAt']):
         return False
     # A real click inside the page, as the user makes: the page is out of reach, so aim at its frame.
-    popup = next(h for h in client.chrome_window_handles if client.switch_to_window(h) is None and
-                 client.execute_script('return document.documentElement.getAttribute("windowtype")') == 'mail:extensionPopup')
-    client.switch_to_window(popup)
+    for handle in client.chrome_window_handles:
+        client.switch_to_window(handle)
+        if client.execute_script('return document.documentElement.getAttribute("windowtype")') == 'mail:extensionPopup':
+            break
     frame = client.find_element(By.CSS_SELECTOR, 'browser')
     width, height = client.execute_script('const r = arguments[0].getBoundingClientRect(); return [r.width, r.height];', script_args=[frame])
     x, y = state['copyAt']

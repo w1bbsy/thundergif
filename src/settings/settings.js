@@ -9,7 +9,7 @@ import {
 } from './store.js';
 import { PROVIDERS, PROVIDER_IDS } from '../providers/providers.js';
 import { ProviderError } from '../providers/provider-request.js';
-import { showNoticeBar } from '../notice/notice-bar.js';
+import { showNoticeBar, SHOW_GIFS_SECTION } from '../notice/notice-bar.js';
 import { hasExperiment } from '../edition.js';
 
 /**
@@ -26,7 +26,7 @@ export async function startSettings({ document, browser, fetch }) {
   const ratingField = /** @type {HTMLSelectElement} */ (document.getElementById('rating'));
   const keyField = (/** @type {string} */ id) => /** @type {HTMLInputElement} */ (document.getElementById(`${id}-key`));
   await showNoticeBar(document, browser, /** @type {HTMLElement} */ (document.querySelector('.notice')));
-  if (!hasExperiment(browser)) showSteps(document);
+  if (!hasExperiment(browser)) showGifsSection(document);
 
   /**
    * The key each Provider was last checked with, so unchanged keys are not checked again.
@@ -99,16 +99,21 @@ export async function startSettings({ document, browser, fetch }) {
     access.append(row);
     await showAccess(document, browser, row, PROVIDERS[id]);
   }
+
+  // Opened from the Notice bar: scroll to the steps once everything above them is in place.
+  if (document.defaultView?.location.hash === `#${SHOW_GIFS_SECTION}`) {
+    document.getElementById(SHOW_GIFS_SECTION)?.scrollIntoView();
+  }
 }
 
 /**
  * Shows the steps for seeing GIFs while writing, which only the ATN edition needs: Thundergif Live's
- * Experiment unblocks them instead (ADR 0002). Scrolls to them when the page was opened for them.
+ * Experiment unblocks them instead (ADR 0002).
  *
  * @param {Document} document
  */
-function showSteps(document) {
-  const section = /** @type {HTMLElement} */ (document.getElementById('show-gifs'));
+function showGifsSection(document) {
+  const section = /** @type {HTMLElement} */ (document.getElementById(SHOW_GIFS_SECTION));
   const list = /** @type {HTMLElement} */ (section.querySelector('.servers'));
   const status = /** @type {HTMLElement} */ (section.querySelector('.copy-status'));
   for (const id of PROVIDER_IDS) {
@@ -134,7 +139,6 @@ function showSteps(document) {
     list.append(item);
   }
   section.hidden = false;
-  if (document.defaultView?.location.hash === '#show-gifs') section.scrollIntoView();
 }
 
 /**

@@ -2,6 +2,7 @@
 // and one KLIPY GIF through the add-on's real insertion path, as the Picker would. Both use the
 // one media server per Provider that the adapters insert from (media.giphy.com, static.klipy.com).
 import { insertIntoCompose } from './compose/insert.js';
+import { openShowGifsSteps } from './notice/notice-bar.js';
 
 const GIFS = [
   {
@@ -36,10 +37,11 @@ browser.tabs.onCreated.addListener(async (tab) => {
 });
 
 // When the check opens a content tab, open the settings page at the steps for showing GIFs while
-// writing, exactly as the Picker's Notice bar link does. Once only: the new window is a tab too.
+// writing, through the same function the Picker's Notice bar link calls. Once only: the new window
+// is a tab too.
 let settingsOpened = false;
 browser.tabs.onCreated.addListener(async (tab) => {
   if (tab.type !== 'content' || settingsOpened) return;
   settingsOpened = true;
-  await browser.windows.create({ url: browser.runtime.getURL('settings/settings.html#show-gifs'), type: 'popup', width: 520, height: 640 });
+  await openShowGifsSteps(browser);
 });
