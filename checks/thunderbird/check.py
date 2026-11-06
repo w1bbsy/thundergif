@@ -1,11 +1,14 @@
 """Real-Thunderbird check of both Editions (ADR 0002): does a GIF inserted by Thundergif go into
-an HTML draft as a link, and is its link pasted into a plain-text draft?
+an HTML draft as a link, and is its link pasted into a plain-text draft? For the ATN edition, do
+its settings steps open from the Notice bar link and copy the right address?
 
 For each Edition it starts a throwaway, headless Thunderbird with an empty profile (no access
 to your own profile, accounts or mail), installs a check build, opens a new HTML draft, lets
 the add-on insert a GIF through its real insertion path, and reports whether Thunderbird
 loaded the image. Thundergif Live's GIF must show in the draft (its Experiment unblocks it);
-the ATN edition's GIF must be inserted but blocked, as it has no Experiment.
+the ATN edition's GIF must be inserted but blocked, as it has no Experiment. The ATN edition's
+settings page must also open at the steps, and its Copy button must put the GIPHY address on the
+clipboard without any clipboard permission.
 
 It also compares the installed Thunderbird with Thundergif Live's cap (strict_max_version,
 which addons.thunderbird.net requires of add-ons with an Experiment; the ATN edition has none).
@@ -18,7 +21,8 @@ Exit code 0 = everything passes on the installed Thunderbird, 1 = anything else.
 """
 import hashlib, json, os, re, shutil, ssl, subprocess, sys, tempfile, time, urllib.request, zipfile
 import certifi
-from marionette_driver.marionette import Marionette
+from marionette_driver.by import By
+from marionette_driver.marionette import ActionSequence, Marionette
 from marionette_driver.addons import Addons
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -110,6 +114,8 @@ def build_check_xpi(work, edition, cap=None):
     # The same staging the release build uses, so the check tests what ships.
     subprocess.run(['node', os.path.join(ROOT, 'scripts', 'editions.mjs'), edition, addon], check=True)
     shutil.copy(os.path.join(HERE, 'check-background.js'), addon)
+    with open(os.path.join(addon, 'settings', 'settings-main.js'), 'a') as page:
+        page.write(open(os.path.join(HERE, 'check-settings.js')).read())
     manifest_path = os.path.join(addon, 'manifest.json')
     manifest = json.load(open(manifest_path))
     manifest['background'] = {'scripts': ['check-background.js'], 'type': 'module'}
@@ -179,6 +185,61 @@ def html_draft_images(client):
     return images
 
 
+OPEN_CONTENT_TAB = """
+Services.wm.getMostRecentWindow("mail:3pane").document.getElementById("tabmail")
+  .openTab("contentTab", { url: "about:blank" });
+"""
+
+SETTINGS_STATE = """
+const win = Services.wm.getMostRecentWindow("mail:extensionPopup");
+const title = win?.document.querySelector("browser")?.browsingContext?.currentWindowGlobal?.documentTitle;
+return title?.startsWith("CHECK") ? JSON.parse(title.slice(5)) : null;
+"""
+
+CLIPBOARD_TEXT = """
+const t = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable);
+t.init(null);
+t.addDataFlavor("text/plain");
+Services.clipboard.getData(t, Ci.nsIClipboard.kGlobalClipboard, null);
+const out = {};
+try { t.getTransferData("text/plain", out); } catch { return ""; }
+return out.value.QueryInterface(Ci.nsISupportsString).data;
+"""
+
+
+def settings_steps(client):
+    """Opens the settings page as the Notice bar link does, then clicks Copy for GIPHY. True when
+    the page opens scrolled to the steps and the GIPHY address lands on the clipboard."""
+    client.execute_script(OPEN_CONTENT_TAB)
+    state = None
+    for _ in range(40):
+        time.sleep(0.5)
+        state = client.execute_script(SETTINGS_STATE)
+        if state and state['copyAt']:
+            break
+    print('Settings page:', json.dumps(state))
+    at_steps = bool(state) and state['shown'] and state['inView'] and state['scrolled']
+    print('PASS: Notice bar link opens the settings page at the steps' if at_steps
+          else 'FAIL: settings page did not open at the steps')
+    if not (state and state['copyAt']):
+        return False
+    # A real click inside the page, as the user makes: the page is out of reach, so aim at its frame.
+    popup = next(h for h in client.chrome_window_handles if client.switch_to_window(h) is None and
+                 client.execute_script('return document.documentElement.getAttribute("windowtype")') == 'mail:extensionPopup')
+    client.switch_to_window(popup)
+    frame = client.find_element(By.CSS_SELECTOR, 'browser')
+    width, height = client.execute_script('const r = arguments[0].getBoundingClientRect(); return [r.width, r.height];', script_args=[frame])
+    x, y = state['copyAt']
+    ActionSequence(client, 'pointer', 'mouse', {'pointerType': 'mouse'}) \
+        .pointer_move(int(x - width / 2), int(y - height / 2), origin=frame).pointer_down().pointer_up().perform()
+    time.sleep(1)
+    copied = client.execute_script(CLIPBOARD_TEXT)
+    copy_ok = copied == EXCEPTIONS[0]
+    print(f'PASS: Copy puts {copied} on the clipboard, no permission needed' if copy_ok
+          else f'FAIL: Copy left {copied!r} on the clipboard ({(client.execute_script(SETTINGS_STATE) or {}).get("status")})')
+    return at_steps and copy_ok
+
+
 def run_drafts(edition, cap=None):
     """Installs a check build of an Edition in a throwaway Thunderbird and tests both draft types.
     Returns True when the GIF is in the HTML draft as a link (shown for Live, blocked for the
@@ -240,7 +301,8 @@ def run_drafts(edition, cap=None):
                 break
         plain_ok = all(url in text for url in GIF_URLS) and client.execute_script(DRAFT_IMAGES) == []
         print('PASS: GIF link typed into the plain-text draft' if plain_ok else f'FAIL: plain-text draft holds {text!r}')
-        return html_ok and plain_ok
+        steps_ok = edition == 'live' or settings_steps(client)
+        return html_ok and plain_ok and steps_ok
     finally:
         thunderbird.terminate()
         thunderbird.wait(timeout=30)

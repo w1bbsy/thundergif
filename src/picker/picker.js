@@ -27,7 +27,9 @@ export async function startPicker(env) {
   document.querySelector('button.settings')?.addEventListener('click', () => browser.runtime.openOptionsPage());
   document.querySelector('main.picker')?.addEventListener('keydown', (event) => keyboard(env, searchBox, /** @type {KeyboardEvent} */ (event)));
   await showNoticeBar(document, browser, /** @type {HTMLElement} */ (document.querySelector('.notice')), {
-    showSteps: () => browser.runtime.openOptionsPage(),
+    // A window of its own, in front of the compose window, opened at the steps themselves.
+    showSteps: () =>
+      browser.windows.create({ url: browser.runtime.getURL('settings/settings.html#show-gifs'), type: 'popup', width: 520, height: 640 }),
   });
   const composeTab = await findComposeTab(browser);
   if (composeTab && (await isPlainText(browser, composeTab.id))) {

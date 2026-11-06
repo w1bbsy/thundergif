@@ -13,6 +13,9 @@ const keyRejected = (/** @type {Response} */ r) => r.status === 401 || r.status 
  * Host permissions the add-on needs for GIPHY: the API, plus the media servers, because a GIF
  * placed in the compose editor by the add-on is loaded on the add-on's behalf.
  */
+/** The one media server GIFs are inserted from; the ATN edition's users add it as an exception. */
+export const GIPHY_MEDIA_SERVER = 'media.giphy.com';
+
 export const GIPHY_ORIGINS = [
   'https://api.giphy.com/*',
   'https://media.giphy.com/*',
@@ -88,7 +91,7 @@ function toGif(item) {
     description: item.alt_text || item.title || 'GIF',
     preview: { url: preview.url, width: Number(preview.width), height: Number(preview.height) },
     insert: {
-      url: toMainMediaServer(insert.url, /^(media[0-4]|i)\.giphy\.com$/, 'media.giphy.com'),
+      url: toMainMediaServer(insert.url, /^(media[0-4]|i)\.giphy\.com$/, GIPHY_MEDIA_SERVER),
       width: Number(insert.width),
       height: Number(insert.height),
     },

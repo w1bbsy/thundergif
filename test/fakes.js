@@ -99,11 +99,16 @@ export function fakeThunderbird({ storage = {}, granted = true, editorAccepts = 
     },
     runtime: {
       openOptionsPage: async () => {},
+      getURL: (path) => `moz-extension://thundergif/${path}`,
     },
     windows: {
       opened: [],
       async openDefaultBrowser(url) {
         this.opened.push(url);
+      },
+      created: [],
+      async create(details) {
+        this.created.push(details);
       },
     },
     // Thundergif's own Experiment API.
@@ -139,4 +144,20 @@ export function fakeNetwork(routes) {
     return new Response(body, { status: match.status ?? 200, headers: { 'content-type': 'application/json' } });
   }
   return { fetch, requests };
+}
+
+/**
+ * Stands in for the system clipboard, which extension pages write to with navigator.clipboard.
+ * @param {{ refuses?: boolean }} [options] refuses: the browser declines to write, as it may
+ */
+export function fakeClipboard({ refuses = false } = {}) {
+  const clipboard = {
+    text: '',
+    async writeText(text) {
+      if (refuses) throw new DOMException('Clipboard write was blocked', 'NotAllowedError');
+      clipboard.text = text;
+    },
+  };
+  Object.defineProperty(window.navigator, 'clipboard', { value: clipboard, configurable: true });
+  return clipboard;
 }

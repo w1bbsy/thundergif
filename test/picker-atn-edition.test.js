@@ -43,14 +43,13 @@ describe('Notice bar in the Picker', () => {
     expect(screen.queryByText(NOTICE)).toBeNull();
   });
 
-  it('opens settings to show GIFs while writing', async () => {
+  it('opens the settings page at the steps for showing GIFs while writing', async () => {
     const { browser } = await openPicker({ edition: 'atn' });
-    let opened = false;
-    browser.runtime.openOptionsPage = async () => (opened = true);
 
     await userEvent.click(await screen.findByRole('button', { name: 'Show them while writing' }));
 
-    expect(opened).toBe(true);
+    expect(browser.windows.created).toHaveLength(1);
+    expect(browser.windows.created[0].url).toBe('moz-extension://thundergif/settings/settings.html#show-gifs');
   });
 
   it('goes away when dismissed and stays away the next time the Picker opens', async () => {

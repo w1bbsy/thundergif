@@ -9,6 +9,9 @@ const LOOKUP_LIMIT = 50;
 const keyRejected = (/** @type {Response} */ r) => [401, 403, 404].includes(r.status);
 
 /** Host permissions the add-on needs for KLIPY: the API and its media servers. */
+/** The one media server GIFs are inserted from; the ATN edition's users add it as an exception. */
+export const KLIPY_MEDIA_SERVER = 'static.klipy.com';
+
 export const KLIPY_ORIGINS = [
   'https://api.klipy.com/*',
   'https://static.klipy.com/*',
@@ -90,7 +93,7 @@ function toGif(item) {
     description: item.title || 'GIF',
     preview: { url: preview.url, width: preview.width, height: preview.height },
     insert: {
-      url: toMainMediaServer(insert.url, /^static[12]\.klipy\.com$/, 'static.klipy.com'),
+      url: toMainMediaServer(insert.url, /^static[12]\.klipy\.com$/, KLIPY_MEDIA_SERVER),
       width: insert.width,
       height: insert.height,
     },

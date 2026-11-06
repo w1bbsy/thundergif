@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { screen, waitFor } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
-import { loadPage, fakeThunderbird, fakeNetwork } from './fakes.js';
+import { loadPage, fakeThunderbird, fakeNetwork, fakeClipboard } from './fakes.js';
 import { startSettings } from '../src/settings/settings.js';
 import { GIPHY_KEY, gridTiles, openPicker } from './picker-harness.js';
 
@@ -9,8 +9,9 @@ const giphyWorks = { prefix: 'https://api.giphy.com/v1/gifs/', fixture: 'giphy-t
 const klipyWorks = { prefix: 'https://api.klipy.com/api/v1/', fixture: 'klipy-trending.json' };
 const answer = (prefix, status, json) => ({ prefix, status, json });
 
-async function openSettings({ storage = {}, granted = true, routes = [giphyWorks, klipyWorks], edition = 'live' } = {}) {
+async function openSettings({ storage = {}, granted = true, routes = [giphyWorks, klipyWorks], edition = 'live', hash = '' } = {}) {
   loadPage('settings/settings.html');
+  window.location.hash = hash;
   const tb = fakeThunderbird({ storage, granted, edition });
   const net = fakeNetwork(routes);
   await startSettings({ document, browser: tb.browser, fetch: net.fetch });
@@ -232,5 +233,81 @@ describe('Notice bar on the settings page', () => {
     await openSettings({ edition: 'atn', storage: stored });
 
     expect(screen.queryByText(NOTICE)).toBeNull();
+  });
+});
+
+describe('Show GIFs while you write', () => {
+  const steps = () => screen.getByRole('region', { name: 'Show GIFs while you write' });
+
+  it('gives the ATN edition the steps to add each GIF server as a remote-content exception', async () => {
+    await openSettings({ edition: 'atn' });
+
+    const text = steps().textContent;
+    expect(text).toMatch(/Settings > Privacy & Security/);
+    expect(text).toMatch(/Email content/);
+    expect(text).toMatch(/Exceptions/);
+    expect(text).toMatch(/https:\/\/media\.giphy\.com/);
+    expect(text).toMatch(/https:\/\/static\.klipy\.com/);
+  });
+
+  it('copies the GIPHY address exactly as it is to be entered', async () => {
+    const clipboard = fakeClipboard();
+    await openSettings({ edition: 'atn' });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Copy the GIPHY address' }));
+
+    expect(clipboard.text).toBe('https://media.giphy.com');
+    expect(await screen.findByText('GIPHY address copied')).toBeTruthy();
+  });
+
+  it('copies the KLIPY address exactly as it is to be entered', async () => {
+    const clipboard = fakeClipboard();
+    await openSettings({ edition: 'atn' });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Copy the KLIPY address' }));
+
+    expect(clipboard.text).toBe('https://static.klipy.com');
+  });
+
+  it('asks the user to copy the address by hand if Thunderbird will not copy it', async () => {
+    fakeClipboard({ refuses: true });
+    await openSettings({ edition: 'atn' });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Copy the GIPHY address' }));
+
+    expect(await screen.findByText(/Could not copy\. Select the GIPHY address and copy it/)).toBeTruthy();
+  });
+
+  it('says that an exception also loads that server\'s images in received emails', async () => {
+    await openSettings({ edition: 'atn' });
+
+    expect(steps().textContent).toMatch(/also lets images from that server load in emails you receive/);
+  });
+
+  it('mentions Thundergif Live and opens its GitHub page in the default browser', async () => {
+    const { browser } = await openSettings({ edition: 'atn' });
+
+    expect(steps().textContent).toMatch(/Thundergif Live, a version that shows GIFs while you write/);
+    expect(steps().textContent).toMatch(/not listed on addons\.thunderbird\.net/);
+    await userEvent.click(screen.getByRole('link', { name: "the project's GitHub page" }));
+
+    expect(browser.windows.opened).toEqual(['https://github.com/w1bbsy/thundergif']);
+  });
+
+  it('scrolls to the steps when opened from the Notice bar', async () => {
+    const scrolledTo = [];
+    window.HTMLElement.prototype.scrollIntoView = function () {
+      scrolledTo.push(this);
+    };
+    await openSettings({ edition: 'atn', hash: '#show-gifs' });
+
+    expect(scrolledTo).toEqual([steps()]);
+  });
+
+  it('is not shown in Thundergif Live, whose drafts show GIFs', async () => {
+    await openSettings({ edition: 'live' });
+
+    expect(screen.queryByRole('region', { name: 'Show GIFs while you write' })).toBeNull();
+    expect(screen.queryByRole('link', { name: "the project's GitHub page" })).toBeNull();
   });
 });

@@ -34,3 +34,12 @@ browser.tabs.onCreated.addListener(async (tab) => {
   for (const gif of GIFS) results.push(await insertIntoCompose(browser, tab.id, gif).catch((error) => `error: ${error}`));
   await browser.storage.local.set({ checkInsertResult: results });
 });
+
+// When the check opens a content tab, open the settings page at the steps for showing GIFs while
+// writing, exactly as the Picker's Notice bar link does. Once only: the new window is a tab too.
+let settingsOpened = false;
+browser.tabs.onCreated.addListener(async (tab) => {
+  if (tab.type !== 'content' || settingsOpened) return;
+  settingsOpened = true;
+  await browser.windows.create({ url: browser.runtime.getURL('settings/settings.html#show-gifs'), type: 'popup', width: 520, height: 640 });
+});

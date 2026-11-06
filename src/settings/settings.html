@@ -24,6 +24,27 @@
       <p class="status" role="status"></p>
     </form>
     <section class="access" aria-label="Access to Providers"></section>
+    <section class="show-gifs" id="show-gifs" aria-labelledby="show-gifs-heading" hidden>
+      <h2 id="show-gifs-heading">Show GIFs while you write</h2>
+      <p>
+        Thunderbird blocks images from other servers while you write, so a GIF shows as a blank box.
+        Your recipients see it either way. To see GIFs while writing, allow the server each Provider's
+        GIFs come from:
+      </p>
+      <ol>
+        <li>In Thunderbird, open Settings &gt; Privacy &amp; Security.</li>
+        <li>Under Email content, click Exceptions.</li>
+        <li>Paste an address below into Address of web site, click Allow, then Save Changes.</li>
+      </ol>
+      <ul class="servers"></ul>
+      <p class="copy-status" role="status"></p>
+      <p>An exception also lets images from that server load in emails you receive.</p>
+      <p>
+        Thundergif Live, a version that shows GIFs while you write, is available from
+        <a href="https://github.com/w1bbsy/thundergif">the project's GitHub page</a>. It needs extra
+        permissions, so it is not listed on addons.thunderbird.net.
+      </p>
+    </section>
     <section class="privacy" aria-label="What Thundergif sends">
       <h2>What Thundergif sends</h2>
       <p>

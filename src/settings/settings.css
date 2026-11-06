@@ -71,3 +71,29 @@ body {
   font: inherit;
   cursor: pointer;
 }
+/* Show GIFs while you write (ATN edition only). */
+.show-gifs {
+  max-width: 420px;
+  margin-top: 16px;
+}
+.show-gifs h2 {
+  font-size: 13px;
+  margin: 0 0 4px;
+}
+.show-gifs ol,
+.show-gifs ul {
+  padding-left: 20px;
+}
+.show-gifs .servers {
+  list-style: none;
+  padding-left: 0;
+}
+.show-gifs .servers li {
+  margin: 4px 0;
+}
+.show-gifs code {
+  user-select: all;
+}
+.show-gifs[hidden] {
+  display: none;
+}

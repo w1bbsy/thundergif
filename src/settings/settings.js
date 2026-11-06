@@ -10,6 +10,7 @@ import {
 import { PROVIDERS, PROVIDER_IDS } from '../providers/providers.js';
 import { ProviderError } from '../providers/provider-request.js';
 import { showNoticeBar } from '../notice/notice-bar.js';
+import { hasExperiment } from '../edition.js';
 
 /**
  * @typedef {object} SettingsEnv
@@ -25,6 +26,7 @@ export async function startSettings({ document, browser, fetch }) {
   const ratingField = /** @type {HTMLSelectElement} */ (document.getElementById('rating'));
   const keyField = (/** @type {string} */ id) => /** @type {HTMLInputElement} */ (document.getElementById(`${id}-key`));
   await showNoticeBar(document, browser, /** @type {HTMLElement} */ (document.querySelector('.notice')));
+  if (!hasExperiment(browser)) showSteps(document);
 
   /**
    * The key each Provider was last checked with, so unchanged keys are not checked again.
@@ -97,6 +99,42 @@ export async function startSettings({ document, browser, fetch }) {
     access.append(row);
     await showAccess(document, browser, row, PROVIDERS[id]);
   }
+}
+
+/**
+ * Shows the steps for seeing GIFs while writing, which only the ATN edition needs: Thundergif Live's
+ * Experiment unblocks them instead (ADR 0002). Scrolls to them when the page was opened for them.
+ *
+ * @param {Document} document
+ */
+function showSteps(document) {
+  const section = /** @type {HTMLElement} */ (document.getElementById('show-gifs'));
+  const list = /** @type {HTMLElement} */ (section.querySelector('.servers'));
+  const status = /** @type {HTMLElement} */ (section.querySelector('.copy-status'));
+  for (const id of PROVIDER_IDS) {
+    const { name, mediaServer } = PROVIDERS[id];
+    const address = document.createElement('code');
+    address.textContent = mediaServer;
+    const copy = document.createElement('button');
+    copy.type = 'button';
+    copy.textContent = 'Copy';
+    copy.setAttribute('aria-label', `Copy the ${name} address`);
+    // Writing to the clipboard from a click needs no extra permission. Should Thunderbird refuse,
+    // the address selects with one click so it can be copied by hand.
+    copy.addEventListener('click', async () => {
+      try {
+        await document.defaultView?.navigator.clipboard.writeText(mediaServer);
+        status.textContent = `${name} address copied`;
+      } catch {
+        status.textContent = `Could not copy. Select the ${name} address and copy it.`;
+      }
+    });
+    const item = document.createElement('li');
+    item.append(`${name}: `, address, ' ', copy);
+    list.append(item);
+  }
+  section.hidden = false;
+  if (document.defaultView?.location.hash === '#show-gifs') section.scrollIntoView();
 }
 
 /**
