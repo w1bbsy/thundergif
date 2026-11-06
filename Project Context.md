@@ -97,7 +97,7 @@ Built 22/10/2026 as 1.1.0: #13 (search kept on switch), #14 (beer link), #15 (GI
 - B4 (06/11/2026): the Thundergif Live link sits on the settings page only, worded neutrally ("a version that shows GIFs while you write ... needs extra permissions, so it isn't listed here"), and is declared in the ATN reviewer notes. ATN policy on such links not checked; if reviewers object, remove it and resubmit.
 - B5 (06/11/2026): one source tree, two builds. Only the manifest (name, ID, cap, Experiment) and inclusion of experiments/ differ. `npm run build` writes thundergif-<version>.xpi (ATN) and thundergif-live-<version>.xpi (GitHub). Behaviour switches at run time on whether the Experiment is present. Tests cover both editions; the real-Thunderbird check covers both; `npm run compat` affects Live only (ATN edition has no cap).
 - B6 (06/11/2026): both editions share version numbers; next is 1.2.0. One GitHub Release carries both .xpi files, and its notes tell 1.1.1 users to remove it and install Thundergif Live or the ATN edition. ATN gets thundergif-1.2.0.xpi on the existing listing; listing text and reviewer notes drop the Experiment and install-warning passages and declare the Live link. Maintainer removes their own 1.1.1 and installs Live, or ATN would update it to the plain edition.
-- Grilling for route B finished 06/11/2026. Next: spec (/to-spec), then tickets.
+- Grilling for route B finished 06/11/2026. Spec published as issue #17 (06/11/2026). Next: tickets.
 
 ## Thunderbird 159 (29/10/2026)
 
