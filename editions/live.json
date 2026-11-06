@@ -1,0 +1,28 @@
+{
+  "name": "Thundergif Live",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "thundergif-live@w1bbsy.github.io",
+      "strict_max_version": "159.*"
+    }
+  },
+  "compose_action": {
+    "default_title": "Insert a GIF (Thundergif Live)"
+  },
+  "experiment_apis": {
+    "thundergifCompose": {
+      "schema": "experiments/compose/schema.json",
+      "parent": {
+        "scopes": [
+          "addon_parent"
+        ],
+        "paths": [
+          [
+            "thundergifCompose"
+          ]
+        ],
+        "script": "experiments/compose/implementation.js"
+      }
+    }
+  }
+}

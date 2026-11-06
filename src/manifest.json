@@ -6,8 +6,7 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "thundergif@w1bbsy.github.io",
-      "strict_min_version": "140.0",
-      "strict_max_version": "159.*"
+      "strict_min_version": "140.0"
     }
   },
   "icons": {
@@ -58,21 +57,5 @@
     "https://static.klipy.com/*",
     "https://static1.klipy.com/*",
     "https://static2.klipy.com/*"
-  ],
-  "experiment_apis": {
-    "thundergifCompose": {
-      "schema": "experiments/compose/schema.json",
-      "parent": {
-        "scopes": [
-          "addon_parent"
-        ],
-        "paths": [
-          [
-            "thundergifCompose"
-          ]
-        ],
-        "script": "experiments/compose/implementation.js"
-      }
-    }
-  }
+  ]
 }

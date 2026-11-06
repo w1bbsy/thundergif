@@ -30,9 +30,9 @@ export const starFor = async (description) =>
   within(await screen.findByRole('list', { name: 'GIFs' })).getByRole('button', { name: `Favourite: ${description}` });
 export const firstTileDescription = async () => (await gridTiles())[0]?.querySelector('img')?.alt;
 
-export async function openPicker({ storage = { giphyKey: GIPHY_KEY }, granted = true, editorAccepts = true, plainText = false, routes = [giphyTrending], waitForStart = true } = {}) {
+export async function openPicker({ storage = { giphyKey: GIPHY_KEY }, granted = true, editorAccepts = true, plainText = false, routes = [giphyTrending], waitForStart = true, edition = 'live' } = {}) {
   loadPage('picker/picker.html');
-  const tb = fakeThunderbird({ storage, granted, editorAccepts, plainText });
+  const tb = fakeThunderbird({ storage, granted, editorAccepts, plainText, edition });
   const net = fakeNetwork(routes);
   const closed = { value: false };
   const started = startPicker({

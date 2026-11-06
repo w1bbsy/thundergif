@@ -13,6 +13,15 @@ export async function isPlainText(browser, tabId) {
 }
 
 /**
+ * Whether this Edition includes the Experiment (Thundergif Live) or not (the ATN edition).
+ *
+ * @param {any} browser Thunderbird's add-on API
+ */
+export function hasExperiment(browser) {
+  return browser.thundergifCompose !== undefined;
+}
+
+/**
  * Places a GIF at the cursor of a compose tab: as a linked image in HTML emails, or as its
  * link in plain-text emails.
  *
@@ -25,7 +34,9 @@ export async function insertIntoCompose(browser, tabId, gif) {
   if (await isPlainText(browser, tabId)) {
     return runInEditor(browser, tabId, insertLink, [gif.insert.url]);
   }
-  await browser.thundergifCompose.allowRemoteImages(tabId);
+  // Thundergif Live's Experiment lets the draft show the GIF; the ATN edition has no Experiment,
+  // so its GIFs are blocked in the draft (recipients still see them). See ADR 0002.
+  if (hasExperiment(browser)) await browser.thundergifCompose.allowRemoteImages(tabId);
   return runInEditor(browser, tabId, insertGif, [
     { url: gif.insert.url, width: gif.insert.width, height: gif.insert.height, alt: gif.description },
   ]);

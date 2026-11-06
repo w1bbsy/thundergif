@@ -1,17 +1,18 @@
-"""Real-Thunderbird check: does a GIF inserted by Thundergif show in an HTML draft, and is
-its link pasted into a plain-text draft?
+"""Real-Thunderbird check of both Editions (ADR 0002): does a GIF inserted by Thundergif go into
+an HTML draft as a link, and is its link pasted into a plain-text draft?
 
-Starts a throwaway, headless Thunderbird with an empty profile (no access to your own
-profile, accounts or mail), installs a check build of the add-on, opens a new HTML draft,
-lets the add-on insert a GIF through its real insertion path, and reports whether
-Thunderbird actually loaded the image.
+For each Edition it starts a throwaway, headless Thunderbird with an empty profile (no access
+to your own profile, accounts or mail), installs a check build, opens a new HTML draft, lets
+the add-on insert a GIF through its real insertion path, and reports whether Thunderbird
+loaded the image. Thundergif Live's GIF must show in the draft (its Experiment unblocks it);
+the ATN edition's GIF must be inserted but blocked, as it has no Experiment.
 
-It also compares the installed Thunderbird with the add-on's cap (strict_max_version, which
-addons.thunderbird.net requires because Thundergif contains an Experiment). If the cap is below
-the installed version, Thunderbird would switch the add-on off, so the check says so, fails,
-and tests the add-on with the cap raised to show whether raising it is safe.
+It also compares the installed Thunderbird with Thundergif Live's cap (strict_max_version,
+which addons.thunderbird.net requires of add-ons with an Experiment; the ATN edition has none).
+If the cap is below the installed version, Thunderbird would switch Live off, so the check
+says so, fails, and tests Live with the cap raised to show whether raising it is safe.
 
-Usage: python checks/thunderbird/check.py [path-to-src] [--headed]
+Usage: python checks/thunderbird/check.py [--headed]
 Needs Thunderbird installed and `pip install -r checks/thunderbird/requirements.txt`.
 Exit code 0 = everything passes on the installed Thunderbird, 1 = anything else.
 """
@@ -20,7 +21,7 @@ from marionette_driver.marionette import Marionette
 from marionette_driver.addons import Addons
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SRC = next((a for a in sys.argv[1:] if not a.startswith('--')), os.path.join(HERE, '..', '..', 'src'))
+ROOT = os.path.join(HERE, '..', '..')
 HEADLESS = '--headed' not in sys.argv
 THUNDERBIRD = os.environ.get('THUNDERBIRD', '/Applications/Thunderbird.app/Contents/MacOS/thunderbird')
 PORT = 2931
@@ -85,9 +86,11 @@ return Array.from(doc.images).map(i => ({ alt: i.alt, complete: i.complete, natu
 """
 
 
-def build_check_xpi(work, cap=None):
+def build_check_xpi(work, edition, cap=None):
     addon = os.path.join(work, 'addon')
-    shutil.copytree(SRC, addon, ignore=shutil.ignore_patterns('*.d.ts', '.DS_Store'))
+    os.makedirs(addon)
+    # The same staging the release build uses, so the check tests what ships.
+    subprocess.run(['node', os.path.join(ROOT, 'scripts', 'editions.mjs'), edition, addon], check=True)
     shutil.copy(os.path.join(HERE, 'check-background.js'), addon)
     manifest_path = os.path.join(addon, 'manifest.json')
     manifest = json.load(open(manifest_path))
@@ -111,22 +114,24 @@ def installed_major():
 
 
 def manifest_cap():
-    """The add-on's cap, e.g. '158.*', and its major version."""
-    manifest = json.load(open(os.path.join(SRC, 'manifest.json')))
-    cap = manifest['browser_specific_settings']['gecko'].get('strict_max_version', '*')
+    """Thundergif Live's cap, e.g. '158.*', and its major version."""
+    live = json.load(open(os.path.join(ROOT, 'editions', 'live.json')))
+    cap = live['browser_specific_settings']['gecko'].get('strict_max_version', '*')
     return cap, (None if cap == '*' else int(cap.split('.')[0]))
 
 
-def run_drafts(cap=None):
-    """Installs a check build in a throwaway Thunderbird and tests both draft types.
-    Returns True when the GIF shows in an HTML draft and its link lands in a plain-text one."""
+def run_drafts(edition, cap=None):
+    """Installs a check build of an Edition in a throwaway Thunderbird and tests both draft types.
+    Returns True when the GIF is in the HTML draft as a link (shown for Live, blocked for the
+    ATN edition) and its link lands in a plain-text draft."""
+    print(f'--- {"Thundergif Live" if edition == "live" else "ATN edition"} ---')
     work = tempfile.mkdtemp(prefix='thundergif-check-')
     profile = os.path.join(work, 'profile')
     os.makedirs(profile)
     with open(os.path.join(profile, 'user.js'), 'w') as f:
         for key, value in PREFS.items():
             f.write(f'user_pref({json.dumps(key)}, {json.dumps(value)});\n')
-    xpi, _ = build_check_xpi(work, cap)
+    xpi, _ = build_check_xpi(work, edition, cap)
     args = [THUNDERBIRD, '--profile', profile, '--marionette', '--no-remote', '--remote-allow-system-access']
     if HEADLESS:
         args.append('--headless')
@@ -151,8 +156,15 @@ def run_drafts(cap=None):
             if images and all(i['complete'] for i in images):
                 break
         print('HTML draft images:', json.dumps(images))
-        html_ok = bool(images) and all(i['naturalWidth'] > 0 and i['mozDoNotSend'] == 'true' for i in images)
-        print('PASS: GIF shows in the HTML draft as a link' if html_ok else 'FAIL: GIF missing or not shown in the HTML draft')
+        linked = bool(images) and all(i['mozDoNotSend'] == 'true' for i in images)
+        shown = linked and all(i['naturalWidth'] > 0 for i in images)
+        if edition == 'live':
+            html_ok = shown
+            print('PASS: GIF shows in the HTML draft as a link' if html_ok else 'FAIL: GIF missing or not shown in the HTML draft')
+        else:
+            html_ok = linked and not shown
+            print('PASS: GIF is in the HTML draft as a link, blocked as expected without the Experiment' if html_ok
+                  else 'FAIL: GIF missing from the HTML draft, or unexpectedly shown')
 
         client.execute_script(CLOSE_DRAFT)
         time.sleep(1)
@@ -175,18 +187,21 @@ def run_drafts(cap=None):
 def main():
     major, version_text = installed_major()
     cap, cap_major = manifest_cap()
-    print(f'Installed: {version_text}. Thundergif cap: {cap}.')
+    print(f'Installed: {version_text}. Thundergif Live cap: {cap}. The ATN edition has no cap.')
+    atn_ok = run_drafts('atn')
+    print('ATN edition: works on this Thunderbird.' if atn_ok else 'ATN edition: FAILS on this Thunderbird. A real fix is needed.')
     if cap_major is None or cap_major >= major:
-        ok = run_drafts()
-        print('RESULT: all good on this Thunderbird.' if ok else 'RESULT: Thundergif fails on this Thunderbird. A real fix is needed, not just a cap change.')
-        return 0 if ok else 1
-    print(f'Thundergif\'s cap is {cap}, below Thunderbird {major}: Thunderbird would switch it off.')
-    print(f'Testing with the cap raised to {major}.* ...')
-    ok = run_drafts(cap=f'{major}.*')
-    if ok:
-        print(f'RESULT: raise the cap to {major}.* (it works). Run: npm run compat -- {major}')
+        live_ok = run_drafts('live')
+        print('Thundergif Live: works on this Thunderbird.' if live_ok else 'Thundergif Live: FAILS on this Thunderbird. A real fix is needed, not just a cap change.')
+        print('RESULT: all good on this Thunderbird.' if atn_ok and live_ok else 'RESULT: something fails; see above.')
+        return 0 if atn_ok and live_ok else 1
+    print(f'Thundergif Live\'s cap is {cap}, below Thunderbird {major}: Thunderbird would switch it off.')
+    print(f'Testing Thundergif Live with the cap raised to {major}.* ...')
+    live_ok = run_drafts('live', cap=f'{major}.*')
+    if live_ok:
+        print(f'RESULT: raise Thundergif Live\'s cap to {major}.* (it works). Run: npm run compat -- {major}')
     else:
-        print('RESULT: Thundergif fails on this Thunderbird even with the cap raised. A real fix is needed.')
+        print('RESULT: Thundergif Live fails on this Thunderbird even with the cap raised. A real fix is needed.')
     return 1
 
 

@@ -1,5 +1,6 @@
-// One-step compatibility update for a new Thunderbird release: raises the add-on's cap
-// (strict_max_version) to the given major version, bumps the patch version, and builds the .xpi.
+// One-step compatibility update for a new Thunderbird release: raises Thundergif Live's cap
+// (strict_max_version) to the given major version, bumps the shared patch version, and builds
+// both Editions. The ATN edition has no cap, so it needs nothing (ADR 0002).
 // Does not commit, tag, publish or upload.
 //
 // Usage: npm run compat -- 159
@@ -14,11 +15,13 @@ if (!Number.isInteger(major) || major < 140) {
 }
 
 const manifestPath = new URL('../src/manifest.json', import.meta.url);
+const livePath = new URL('../editions/live.json', import.meta.url);
 const packagePath = new URL('../package.json', import.meta.url);
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+const live = JSON.parse(readFileSync(livePath, 'utf8'));
 const pkg = JSON.parse(readFileSync(packagePath, 'utf8'));
 
-const gecko = manifest.browser_specific_settings.gecko;
+const gecko = live.browser_specific_settings.gecko;
 const currentCap = Number(String(gecko.strict_max_version).split('.')[0]);
 if (major <= currentCap) {
   console.error(`The cap is already ${gecko.strict_max_version}; nothing to do.`);
@@ -31,8 +34,9 @@ gecko.strict_max_version = `${major}.*`;
 manifest.version = version;
 pkg.version = version;
 writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
+writeFileSync(livePath, JSON.stringify(live, null, 2) + '\n');
 writeFileSync(packagePath, JSON.stringify(pkg, null, 2) + '\n');
 
-console.log(`Cap raised to ${major}.*, version ${version}.`);
+console.log(`Thundergif Live's cap raised to ${major}.*, version ${version}.`);
 // A real file path, not a URL path: the folder may contain spaces.
 execFileSync(fileURLToPath(new URL('./build.sh', import.meta.url)), { stdio: 'inherit' });

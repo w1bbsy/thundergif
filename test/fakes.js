@@ -19,7 +19,11 @@ export function loadPage(relativePath) {
 
 const declaredOrigins = JSON.parse(readFileSync(join(root, 'manifest.json'), 'utf8')).host_permissions;
 
-export function fakeThunderbird({ storage = {}, granted = true, editorAccepts = true, plainText = false } = {}) {
+/**
+ * @param {object} [options]
+ * @param {'live' | 'atn'} [options.edition] Thundergif Live includes the Experiment; the ATN edition does not.
+ */
+export function fakeThunderbird({ storage = {}, granted = true, editorAccepts = true, plainText = false, edition = 'live' } = {}) {
   const stored = structuredClone(storage);
   const compose = new JSDOM('<!doctype html><html><body><p>Hello </p></body></html>', {
     runScripts: 'outside-only',
@@ -109,6 +113,9 @@ export function fakeThunderbird({ storage = {}, granted = true, editorAccepts = 
       },
     },
   };
+
+  // The ATN edition ships without the Experiment, so Thunderbird exposes no such API to it.
+  if (edition === 'atn') delete browser.thundergifCompose;
 
   return { browser, stored, composeDoc, isShownInDraft };
 }
