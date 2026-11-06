@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { screen, within, waitFor } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
+import giphyTrendingFixture from './fixtures/giphy-trending.json';
 import {
   GIPHY_KEY,
   firstGif,
@@ -22,7 +23,10 @@ describe('Picker with a GIPHY Provider key', () => {
     const tiles = await gridTiles();
     expect(tiles).toHaveLength(24);
     const firstPreview = within(tiles[0]).getByRole('img');
-    expect(firstPreview.getAttribute('src')).toMatch(/^https:\/\/media\d\.giphy\.com\/.+\/100w\.gif/);
+    // Previews keep the server GIPHY gave; only inserted GIFs move to media.giphy.com.
+    expect(firstPreview.getAttribute('src')).toBe(
+      'https://media3.giphy.com/media/v1.Y2lkPWYwODJhZjNmaHozcnQ4MTQ2b3hnNG5sMmY2ZWd5Mmc0cGJweWVkb2k1b2Rtb2JxZCZlcD12MV9naWZzX3RyZW5kaW5nJmN0PWc/7lN32ye7lLew1hWOyW/100w.gif',
+    );
   });
 
   it('shows "Powered By GIPHY" while GIPHY is the Provider', async () => {
@@ -65,7 +69,7 @@ describe('Picker with a GIPHY Provider key', () => {
     expect(params.get('rating')).toBe('pg');
   });
 
-  it('inserts the medium version from media.giphy.com as a link at the cursor when a GIF is clicked, then closes', async () => {
+  it('inserts the medium-sized GIF from media.giphy.com as a link at the cursor when a GIF is clicked, then closes', async () => {
     const { composeDoc, browser, closed } = await openPicker();
     const results = await screen.findByRole('list', { name: 'GIFs' });
 
@@ -81,6 +85,18 @@ describe('Picker with a GIPHY Provider key', () => {
     expect(img.getAttribute('alt')).toBe('Boom Bang GIF by Atlanta Dream');
     expect(img.getAttribute('moz-do-not-send')).toBe('true');
     expect(img.getAttribute('width')).toBe(firstGif.images.downsized.width);
+  });
+
+  it('links GIFs GIPHY serves from i.giphy.com to media.giphy.com', async () => {
+    const fromI = structuredClone(giphyTrendingFixture);
+    const downsized = fromI.data[0].images.downsized;
+    downsized.url = downsized.url.replace('://media3.giphy.com/', '://i.giphy.com/');
+    const { composeDoc, closed } = await openPicker({ routes: [{ prefix: giphyTrending.prefix, json: fromI }] });
+
+    await userEvent.click((await gridTiles())[0]);
+
+    await waitFor(() => expect(closed.value).toBe(true));
+    expect(composeDoc.querySelector('img').getAttribute('src')).toBe(FIRST_GIF_INSERT_URL);
   });
 
   it('inserts the GIF so Thunderbird shows it in the draft rather than blocking it', async () => {

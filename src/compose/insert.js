@@ -1,5 +1,6 @@
 import { insertGif } from './insert-gif.js';
 import { insertLink } from './insert-link.js';
+import { hasExperiment } from '../edition.js';
 
 /**
  * Whether the compose tab is writing a plain-text email, where images cannot go inline.
@@ -10,15 +11,6 @@ import { insertLink } from './insert-link.js';
 export async function isPlainText(browser, tabId) {
   const details = await browser.compose.getComposeDetails(tabId);
   return details.isPlainText === true;
-}
-
-/**
- * Whether this Edition includes the Experiment (Thundergif Live) or not (the ATN edition).
- *
- * @param {any} browser Thunderbird's add-on API
- */
-export function hasExperiment(browser) {
-  return browser.thundergifCompose !== undefined;
 }
 
 /**

@@ -1,1 +1,2 @@
 marionette_driver
+certifi

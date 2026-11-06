@@ -64,7 +64,7 @@ export function batches(ids, size) {
  * @param {RegExp} servers matches the host names that serve the same files
  * @param {string} main the host name to use instead
  */
-export function onMainServer(url, servers, main) {
+export function toMainMediaServer(url, servers, main) {
   const address = new URL(url);
   if (servers.test(address.hostname)) address.hostname = main;
   return address.href;

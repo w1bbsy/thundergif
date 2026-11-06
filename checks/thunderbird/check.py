@@ -16,7 +16,8 @@ Usage: python checks/thunderbird/check.py [--headed]
 Needs Thunderbird installed and `pip install -r checks/thunderbird/requirements.txt`.
 Exit code 0 = everything passes on the installed Thunderbird, 1 = anything else.
 """
-import json, os, re, shutil, subprocess, sys, tempfile, time, zipfile
+import hashlib, json, os, re, shutil, ssl, subprocess, sys, tempfile, time, urllib.request, zipfile
+import certifi
 from marionette_driver.marionette import Marionette
 from marionette_driver.addons import Addons
 
@@ -27,8 +28,16 @@ THUNDERBIRD = os.environ.get('THUNDERBIRD', '/Applications/Thunderbird.app/Conte
 PORT = 2931
 # The GIF the check build inserts, read from check-background.js so the two cannot drift.
 GIF_URLS = re.findall(r"url: '(https[^']+)'", open(os.path.join(HERE, 'check-background.js')).read())
-# One remote-content exception per Provider: the servers the ATN edition's settings list.
+# The one media server per Provider that the adapters insert from, so one remote-content
+# exception per Provider is enough for the ATN edition (the settings page will list these).
 EXCEPTIONS = ['https://media.giphy.com', 'https://static.klipy.com']
+# The same GIFs on servers the Providers also use, which the adapters rewrite to the ones above.
+# Each must serve the same file as its main-server address in GIF_URLS.
+OTHER_SERVERS = [
+    GIF_URLS[0].replace('://media.giphy.com/', '://media1.giphy.com/'),
+    GIF_URLS[0].replace('://media.giphy.com/', '://i.giphy.com/'),
+    GIF_URLS[1].replace('://static.klipy.com/', '://static2.klipy.com/'),
+]
 
 PREFS = {
     'marionette.port': PORT,
@@ -114,6 +123,34 @@ def build_check_xpi(work, edition, cap=None):
                 path = os.path.join(root, f)
                 z.write(path, os.path.relpath(path, addon))
     return xpi, manifest['browser_specific_settings']['gecko']['id']
+
+
+# certifi's certificate bundle: Python on macOS does not use the system's by default.
+TLS = ssl.create_default_context(cafile=certifi.where())
+
+
+def fingerprint(url):
+    # A generic client name: KLIPY refuses Python's default one.
+    request = urllib.request.Request(url, headers={'User-Agent': 'thundergif-check'})
+    with urllib.request.urlopen(request, timeout=30, context=TLS) as response:
+        return hashlib.sha256(response.read()).hexdigest()
+
+
+def same_files_on_main_servers():
+    """True when each GIF on another server is byte-identical to its main-server address."""
+    ok = True
+    for other in OTHER_SERVERS:
+        main = next(u for u in GIF_URLS if u.split('/', 3)[3] == other.split('/', 3)[3])
+        other_host, main_host = other.split('/')[2], main.split('/')[2]
+        try:
+            same = fingerprint(other) == fingerprint(main)
+            print(f'PASS: {other_host} serves the same GIF as {main_host}' if same
+                  else f'FAIL: {other_host} and {main_host} serve different files')
+        except OSError as error:
+            same = False
+            print(f'FAIL: could not compare {other_host} with {main_host} ({error})')
+        ok = ok and same
+    return ok
 
 
 def installed_major():
@@ -214,8 +251,12 @@ def main():
     major, version_text = installed_major()
     cap, cap_major = manifest_cap()
     print(f'Installed: {version_text}. Thundergif Live cap: {cap}. The ATN edition has no cap.')
+    servers_ok = same_files_on_main_servers()
+    print('Media servers: one per Provider is enough.' if servers_ok
+          else 'Media servers: FAIL. Inserting from one server per Provider may now be wrong; see above.')
     atn_ok = run_drafts('atn')
     print('ATN edition: works on this Thunderbird.' if atn_ok else 'ATN edition: FAILS on this Thunderbird. A real fix is needed.')
+    atn_ok = atn_ok and servers_ok
     if cap_major is None or cap_major >= major:
         live_ok = run_drafts('live')
         print('Thundergif Live: works on this Thunderbird.' if live_ok else 'Thundergif Live: FAILS on this Thunderbird. A real fix is needed, not just a cap change.')

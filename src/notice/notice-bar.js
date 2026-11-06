@@ -1,6 +1,6 @@
 // The Notice bar: in the ATN edition only, explains that GIFs show as a blank box while writing
 // (there is no Experiment to unblock them; ADR 0002) but recipients see them.
-import { hasExperiment } from '../compose/insert.js';
+import { hasExperiment } from '../edition.js';
 import { getNoticeDismissed, setNoticeDismissed } from '../settings/store.js';
 
 /**

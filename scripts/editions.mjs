@@ -9,8 +9,8 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-export const EDITIONS = ['atn', 'live'];
-export const LIVE_DIFFERENCES = join(root, 'editions', 'live.json');
+const EDITIONS = ['atn', 'live'];
+const LIVE_DIFFERENCES = join(root, 'editions', 'live.json');
 
 const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
 
@@ -25,7 +25,7 @@ function merge(base, extra) {
 }
 
 /** The manifest for an Edition. */
-export function editionManifest(edition) {
+function editionManifest(edition) {
   const base = readJson(join(root, 'src', 'manifest.json'));
   if (edition === 'atn') return base;
   if (edition === 'live') return merge(base, readJson(LIVE_DIFFERENCES));

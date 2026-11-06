@@ -1,6 +1,6 @@
 // GIPHY Provider: the only place that knows GIPHY's URLs, parameters, and response layout.
 
-import { PAGE_SIZE, inOrder, batches, onMainServer } from './gif.js';
+import { PAGE_SIZE, inOrder, batches, toMainMediaServer } from './gif.js';
 import { fetchFromProvider } from './provider-request.js';
 
 const API = 'https://api.giphy.com/v1/gifs';
@@ -88,7 +88,7 @@ function toGif(item) {
     description: item.alt_text || item.title || 'GIF',
     preview: { url: preview.url, width: Number(preview.width), height: Number(preview.height) },
     insert: {
-      url: onMainServer(insert.url, /^(media\d|i)\.giphy\.com$/, 'media.giphy.com'),
+      url: toMainMediaServer(insert.url, /^(media[0-4]|i)\.giphy\.com$/, 'media.giphy.com'),
       width: Number(insert.width),
       height: Number(insert.height),
     },
