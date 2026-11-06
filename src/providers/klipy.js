@@ -1,5 +1,5 @@
 // KLIPY Provider: the only place that knows KLIPY's URLs, parameters, and response layout.
-import { PAGE_SIZE, inOrder, batches } from './gif.js';
+import { PAGE_SIZE, inOrder, batches, onMainServer } from './gif.js';
 import { fetchFromProvider } from './provider-request.js';
 
 const API = 'https://api.klipy.com/api/v1';
@@ -89,6 +89,10 @@ function toGif(item) {
     id: String(item.slug).replace(/--k[A-Za-z0-9]{8}$/, ''),
     description: item.title || 'GIF',
     preview: { url: preview.url, width: preview.width, height: preview.height },
-    insert: { url: insert.url, width: insert.width, height: insert.height },
+    insert: {
+      url: onMainServer(insert.url, /^static\d\.klipy\.com$/, 'static.klipy.com'),
+      width: insert.width,
+      height: insert.height,
+    },
   };
 }

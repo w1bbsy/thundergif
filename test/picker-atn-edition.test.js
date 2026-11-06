@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { screen, waitFor } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
-import { firstGif, gridTiles, isShown, openPicker } from './picker-harness.js';
+import { FIRST_GIF_INSERT_URL, gridTiles, isShown, openPicker } from './picker-harness.js';
 
 const NOTICE = /GIFs show as a blank box while you write, but your recipients see them/i;
 
@@ -14,7 +14,7 @@ describe('Picker in the ATN edition', () => {
 
     await waitFor(() => expect(closed.value).toBe(true));
     const img = composeDoc.querySelector('p img');
-    expect(img.getAttribute('src')).toBe(firstGif.images.downsized.url);
+    expect(img.getAttribute('src')).toBe(FIRST_GIF_INSERT_URL);
     expect(img.getAttribute('moz-do-not-send')).toBe('true');
     expect(isShownInDraft(img)).toBe(false);
   });
@@ -25,7 +25,7 @@ describe('Picker in the ATN edition', () => {
     await userEvent.click((await gridTiles())[0]);
 
     await waitFor(() => expect(closed.value).toBe(true));
-    expect(composeDoc.querySelector('p').textContent).toBe(`Hello ${firstGif.images.downsized.url}`);
+    expect(composeDoc.querySelector('p').textContent).toBe(`Hello ${FIRST_GIF_INSERT_URL}`);
   });
 });
 

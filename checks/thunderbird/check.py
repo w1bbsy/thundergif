@@ -26,7 +26,9 @@ HEADLESS = '--headed' not in sys.argv
 THUNDERBIRD = os.environ.get('THUNDERBIRD', '/Applications/Thunderbird.app/Contents/MacOS/thunderbird')
 PORT = 2931
 # The GIF the check build inserts, read from check-background.js so the two cannot drift.
-GIF_URL = re.search(r"url: '([^']+)'", open(os.path.join(HERE, 'check-background.js')).read()).group(1)
+GIF_URLS = re.findall(r"url: '(https[^']+)'", open(os.path.join(HERE, 'check-background.js')).read())
+# One remote-content exception per Provider: the servers the ATN edition's settings list.
+EXCEPTIONS = ['https://media.giphy.com', 'https://static.klipy.com']
 
 PREFS = {
     'marionette.port': PORT,
@@ -77,6 +79,13 @@ const win = Services.wm.getMostRecentWindow("msgcompose");
 return win ? win.GetCurrentEditorElement().contentDocument.body.textContent : null;
 """
 
+ADD_EXCEPTIONS = """
+for (const origin of arguments[0]) {
+  const principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin);
+  Services.perms.addFromPrincipal(principal, "image", Services.perms.ALLOW_ACTION);
+}
+"""
+
 DRAFT_IMAGES = """
 const win = Services.wm.getMostRecentWindow("msgcompose");
 if (!win) return null;
@@ -120,6 +129,19 @@ def manifest_cap():
     return cap, (None if cap == '*' else int(cap.split('.')[0]))
 
 
+def html_draft_images(client):
+    """Opens a new HTML draft (the check build inserts its GIFs) and returns its images once loaded."""
+    client.execute_script(OPEN_DRAFT, script_args=[False])
+    images = []
+    for _ in range(30):
+        time.sleep(0.5)
+        images = client.execute_script(DRAFT_IMAGES) or []
+        if len(images) == len(GIF_URLS) and all(i['complete'] for i in images):
+            break
+    print('HTML draft images:', json.dumps(images))
+    return images
+
+
 def run_drafts(edition, cap=None):
     """Installs a check build of an Edition in a throwaway Thunderbird and tests both draft types.
     Returns True when the GIF is in the HTML draft as a link (shown for Live, blocked for the
@@ -148,15 +170,8 @@ def run_drafts(edition, cap=None):
             print(f'FAIL: Thunderbird refused to install the add-on ({type(error).__name__})')
             return False
         time.sleep(1)
-        client.execute_script(OPEN_DRAFT, script_args=[False])
-        images = None
-        for _ in range(30):
-            time.sleep(0.5)
-            images = client.execute_script(DRAFT_IMAGES)
-            if images and all(i['complete'] for i in images):
-                break
-        print('HTML draft images:', json.dumps(images))
-        linked = bool(images) and all(i['mozDoNotSend'] == 'true' for i in images)
+        images = html_draft_images(client)
+        linked = len(images) == len(GIF_URLS) and all(i['mozDoNotSend'] == 'true' for i in images)
         shown = linked and all(i['naturalWidth'] > 0 for i in images)
         if edition == 'live':
             html_ok = shown
@@ -166,6 +181,17 @@ def run_drafts(edition, cap=None):
             print('PASS: GIF is in the HTML draft as a link, blocked as expected without the Experiment' if html_ok
                   else 'FAIL: GIF missing from the HTML draft, or unexpectedly shown')
 
+        if edition == 'atn':
+            # With one exception per Provider, the ATN edition's GIFs should show.
+            client.execute_script(CLOSE_DRAFT)
+            time.sleep(1)
+            client.execute_script(ADD_EXCEPTIONS, script_args=[EXCEPTIONS])
+            images = html_draft_images(client)
+            excepted_ok = len(images) == len(GIF_URLS) and all(i['naturalWidth'] > 0 for i in images)
+            print(f'PASS: GIFs show once {" and ".join(EXCEPTIONS)} are remote-content exceptions' if excepted_ok
+                  else 'FAIL: GIFs still blocked with one exception per Provider')
+            html_ok = html_ok and excepted_ok
+
         client.execute_script(CLOSE_DRAFT)
         time.sleep(1)
         client.execute_script(OPEN_DRAFT, script_args=[True])
@@ -173,9 +199,9 @@ def run_drafts(edition, cap=None):
         for _ in range(30):
             time.sleep(0.5)
             text = client.execute_script(DRAFT_TEXT) or ''
-            if 'giphy.com' in text:
+            if all(url in text for url in GIF_URLS):
                 break
-        plain_ok = GIF_URL in text and client.execute_script(DRAFT_IMAGES) == []
+        plain_ok = all(url in text for url in GIF_URLS) and client.execute_script(DRAFT_IMAGES) == []
         print('PASS: GIF link typed into the plain-text draft' if plain_ok else f'FAIL: plain-text draft holds {text!r}')
         return html_ok and plain_ok
     finally:

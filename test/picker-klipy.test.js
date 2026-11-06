@@ -72,6 +72,20 @@ describe('Picker with only a KLIPY Provider key', () => {
     expect(composeDoc.querySelector('img').getAttribute('src')).toBe(klipyTrendingFixture.data.data[0].file.md.gif.url);
   });
 
+  it('links GIFs KLIPY serves from static2.klipy.com to static.klipy.com, its one media server', async () => {
+    const fromStatic2 = structuredClone(klipyTrendingFixture);
+    const md = fromStatic2.data.data[0].file.md.gif;
+    md.url = md.url.replace('://static.klipy.com/', '://static2.klipy.com/');
+    const { composeDoc, closed } = await openKlipyPicker({ routes: [{ prefix: `${API}/trending`, json: fromStatic2 }] });
+
+    await userEvent.click((await gridTiles())[0]);
+
+    await waitFor(() => expect(closed.value).toBe(true));
+    expect(composeDoc.querySelector('img').getAttribute('src')).toBe(
+      'https://static.klipy.com/ii/84b4c0b02782dda9051003f9e36484ec/5d/93/y4qKM7eV.gif',
+    );
+  });
+
   it.each([
     ['g', 'high'],
     ['pg', 'medium'],

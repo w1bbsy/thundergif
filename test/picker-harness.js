@@ -7,6 +7,10 @@ import { startPicker } from '../src/picker/picker.js';
 
 export const GIPHY_KEY = 'test-giphy-key';
 export const firstGif = giphyTrendingFixture.data[0];
+// GIPHY serves each GIF from media0 to media4 and media.giphy.com alike. Thundergif always links
+// to media.giphy.com, so the ATN edition's users need only one remote-content exception for GIPHY.
+export const FIRST_GIF_INSERT_URL =
+  'https://media.giphy.com/media/v1.Y2lkPWYwODJhZjNmaHozcnQ4MTQ2b3hnNG5sMmY2ZWd5Mmc0cGJweWVkb2k1b2Rtb2JxZCZlcD12MV9naWZzX3RyZW5kaW5nJmN0PWc/7lN32ye7lLew1hWOyW/giphy-downsized.gif';
 export const giphyTrending = { prefix: 'https://api.giphy.com/v1/gifs/trending', fixture: 'giphy-trending.json' };
 export const giphySearch = (q, offset, fixture) => ({
   prefix: 'https://api.giphy.com/v1/gifs/search',

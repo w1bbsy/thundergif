@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import {
   GIPHY_KEY,
   firstGif,
+  FIRST_GIF_INSERT_URL,
   giphyTrending,
   giphySearch,
   searchRoutes,
@@ -64,7 +65,7 @@ describe('Picker with a GIPHY Provider key', () => {
     expect(params.get('rating')).toBe('pg');
   });
 
-  it('inserts the medium version as a link at the cursor when a GIF is clicked, then closes', async () => {
+  it('inserts the medium version from media.giphy.com as a link at the cursor when a GIF is clicked, then closes', async () => {
     const { composeDoc, browser, closed } = await openPicker();
     const results = await screen.findByRole('list', { name: 'GIFs' });
 
@@ -75,7 +76,8 @@ describe('Picker with a GIPHY Provider key', () => {
     const paragraph = composeDoc.querySelector('p');
     const img = paragraph.querySelector('img');
     expect(paragraph.firstChild.textContent).toBe('Hello ');
-    expect(img.getAttribute('src')).toBe(firstGif.images.downsized.url);
+    expect(firstGif.images.downsized.url).toContain('://media3.giphy.com/');
+    expect(img.getAttribute('src')).toBe(FIRST_GIF_INSERT_URL);
     expect(img.getAttribute('alt')).toBe('Boom Bang GIF by Atlanta Dream');
     expect(img.getAttribute('moz-do-not-send')).toBe('true');
     expect(img.getAttribute('width')).toBe(firstGif.images.downsized.width);
@@ -336,7 +338,7 @@ describe('Picker in a plain-text email', () => {
 
     await waitFor(() => expect(closed.value).toBe(true));
     expect(composeDoc.querySelector('img')).toBeNull();
-    expect(composeDoc.querySelector('p').textContent).toBe(`Hello ${firstGif.images.downsized.url}`);
+    expect(composeDoc.querySelector('p').textContent).toBe(`Hello ${FIRST_GIF_INSERT_URL}`);
   });
 
   it('does not show the plain-text note in an HTML email', async () => {

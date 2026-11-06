@@ -53,3 +53,19 @@ export function inOrder(ids, gifs) {
 export function batches(ids, size) {
   return Array.from({ length: Math.ceil(ids.length / size) }, (_, i) => ids.slice(i * size, (i + 1) * size));
 }
+
+/**
+ * The same address on a Provider's one main media server. Providers spread GIFs across several
+ * interchangeable servers; always linking to one means the ATN edition's users need only one
+ * remote-content exception per Provider to see GIFs while writing (ADR 0002). Addresses on any
+ * other server are left alone.
+ *
+ * @param {string} url
+ * @param {RegExp} servers matches the host names that serve the same files
+ * @param {string} main the host name to use instead
+ */
+export function onMainServer(url, servers, main) {
+  const address = new URL(url);
+  if (servers.test(address.hostname)) address.hostname = main;
+  return address.href;
+}
