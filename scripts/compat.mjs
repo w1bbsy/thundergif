@@ -17,9 +17,11 @@ if (!Number.isInteger(major) || major < 140) {
 const manifestPath = new URL('../src/manifest.json', import.meta.url);
 const livePath = new URL('../editions/live.json', import.meta.url);
 const packagePath = new URL('../package.json', import.meta.url);
+const lockPath = new URL('../package-lock.json', import.meta.url);
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
 const live = JSON.parse(readFileSync(livePath, 'utf8'));
 const pkg = JSON.parse(readFileSync(packagePath, 'utf8'));
+const lock = JSON.parse(readFileSync(lockPath, 'utf8'));
 
 const gecko = live.browser_specific_settings.gecko;
 const currentCap = Number(String(gecko.strict_max_version).split('.')[0]);
@@ -33,9 +35,12 @@ const version = `${x}.${y}.${z + 1}`;
 gecko.strict_max_version = `${major}.*`;
 manifest.version = version;
 pkg.version = version;
+lock.version = version;
+lock.packages[''].version = version;
 writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
 writeFileSync(livePath, JSON.stringify(live, null, 2) + '\n');
 writeFileSync(packagePath, JSON.stringify(pkg, null, 2) + '\n');
+writeFileSync(lockPath, JSON.stringify(lock, null, 2) + '\n');
 
 console.log(`Thundergif Live's cap raised to ${major}.*, version ${version}.`);
 // A real file path, not a URL path: the folder may contain spaces.

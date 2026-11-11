@@ -3,7 +3,7 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "thundergif-live@w1bbsy.github.io",
-      "strict_max_version": "159.*"
+      "strict_max_version": "160.*"
     }
   },
   "compose_action": {
